@@ -105,7 +105,7 @@ export default class SignIn extends Component {
     return (
       <div className="SignIn-Container">
         <div className="SignUp-SubContainer">
-          <div className="Title">E Commerce</div>
+          <div className="Title">E Shopping</div>
           <div className="Header_Container">Log In</div>
           <div className="Body">
             <form className="form">

@@ -1,9 +1,6 @@
 import React, { Component } from "react";
 import "./UserDashBoard.scss";
-
-import ProjectAdminServices from "../../services/ProjectAdminServices";
-import ProjectUserServices from "../../services/ProjectUserServices";
-import ProjectFeedbackServices from "../../services/ProjectFeedbackServices";
+import ProjectFeedbackServices from "../../services/FeedbackServices";
 
 import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
@@ -55,8 +52,6 @@ import TableRow from "@material-ui/core/TableRow";
 import Paper from "@material-ui/core/Paper";
 import Settings from "@material-ui/icons/Settings";
 
-const services = new ProjectAdminServices();
-const userServices = new ProjectUserServices();
 const feedbackServices = new ProjectFeedbackServices();
 
 const MobileRegex = RegExp(/^[0-9]{11}$/i);
@@ -112,25 +107,6 @@ export default class UserDashBoard extends Component {
     };
     // debugger;
     this.setState({ OpenLoader: true });
-    services
-      .GetCustomerDetail(data)
-      .then((data) => {
-        console.log("GetCustomerDetail Data : ", data);
-        this.setState({
-          BookingList: data.data.data,
-          OpenLoader: false,
-          OpenSnackBar: true,
-          Message: data.data.message,
-        });
-      })
-      .catch((error) => {
-        console.log("GetCustomerDetail Error : ", error);
-        this.setState({
-          OpenLoader: false,
-          OpenSnackBar: true,
-          Message: "Something Went Wrong",
-        });
-      });
   }
 
   handleCompanyName = async (e) => {
@@ -265,29 +241,6 @@ export default class UserDashBoard extends Component {
         idNumber: State.IDNumber,
         pinCode: State.Pincode,
       };
-
-      userServices
-        .InsertCustomerDetail(data)
-        .then((data) => {
-          this.setState({
-            OpenSnackBar: true,
-            Open: false,
-            OpenBookModel: false,
-            Message: data.data.message,
-          });
-          this.GetMasterData();
-          this.handleClose();
-        })
-        .catch((error) => {
-          this.setState({
-            OpenSnackBar: true,
-            Open: false,
-            OpenBookModel: false,
-            Message: "Something Went Wrong",
-          });
-          this.GetMasterData();
-          this.handleClose();
-        });
     } else {
       console.log("Please Fill Required Field");
       this.setState({
@@ -347,29 +300,6 @@ export default class UserDashBoard extends Component {
         idNumber: State.IDNumber,
         pinCode: State.Pincode,
       };
-
-      userServices
-        .UpdateCustomerDetail(data)
-        .then((data) => {
-          this.setState({
-            OpenSnackBar: true,
-            Open: false,
-            OpenBookModel: false,
-            Message: data.data.message,
-          });
-          this.GetBookingList(this.state.BookingPageNumber);
-          this.handleClose();
-        })
-        .catch((error) => {
-          this.setState({
-            OpenSnackBar: true,
-            Open: false,
-            OpenBookModel: false,
-            Message: "Something Went Wrong",
-          });
-          this.GetBookingList(this.state.BookingPageNumber);
-          this.handleClose();
-        });
     } else {
       console.log("Please Fill Required Field");
       this.setState({
@@ -398,26 +328,6 @@ export default class UserDashBoard extends Component {
       let data = {
         customerID: CustomerID,
       };
-      userServices
-        .PayCustomerBill(data)
-        .then((data) => {
-          console.log("handlePayCustomerBill Data : ", data);
-          this.setState({
-            Open: false,
-            OpenPayBill: false,
-            OpenBookModel: false,
-          });
-          this.GetBookingList(this.state.BookingPageNumber);
-        })
-        .catch((error) => {
-          console.log("handlePayCustomerBill Error : ", error);
-          this.setState({
-            Open: false,
-            OpenPayBill: false,
-            OpenBookModel: false,
-          });
-          this.GetBookingList(this.state.BookingPageNumber);
-        });
     } else {
       console.log("Invalid Customer ID");
     }
@@ -425,16 +335,6 @@ export default class UserDashBoard extends Component {
 
   handleDeleteBookingApplication = async (ID) => {
     console.log("handleDeleteBookingApplication Calling ..... ID :", ID);
-    userServices
-      .DeleteCustomerDetail(ID)
-      .then((data) => {
-        console.log("handleDeleteBookingApplication Data : ", data);
-        this.GetBookingList(this.state.BookingPageNumber);
-      })
-      .catch((error) => {
-        console.log("handleDeleteBookingApplication Error : ", error);
-        this.GetBookingList(this.state.BookingPageNumber);
-      });
   };
 
   handleClose = () => {
@@ -853,7 +753,7 @@ export default class UserDashBoard extends Component {
                     boxSizing: "border-box",
                   }}
                 >
-                  E-Commerce &nbsp;
+                  E-Shopping &nbsp;
                   <div style={{ margin: "3px 0 0 0" }}>
                     <ShopIcon />
                   </div>

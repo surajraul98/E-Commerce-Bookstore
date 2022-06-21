@@ -3,7 +3,7 @@ import AxiosServices from './AxiosServices'
 
 const axiosServices = new AxiosServices()
 
-export default class ProjectFeedbackServices {
+export default class FeedbackServices {
   GetFeedbacks(data) {
     return axiosServices.post(FeedbackConfigurations.GetFeedbacks, data, false)
   }

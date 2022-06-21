@@ -162,7 +162,7 @@ export default class SignUp extends Component {
     return (
       <div className="SignUp-Container">
         <div className="SignUp-SubContainer">
-          <div className="Title">E Commerce</div>
+          <div className="Title">E Shopping</div>
           <div className="Header_Container">Registration</div>
           <div className="Body">
             <form className="form">

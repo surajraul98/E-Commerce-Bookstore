@@ -1,8 +1,7 @@
 import React, { Component } from "react";
 import "./AdminDashboard.scss";
-import ProjectAdminServices from "../../services/ProjectAdminServices";
-import ProjectFeedbackServices from "../../services/ProjectFeedbackServices";
-import ProjectUserServices from "../../services/ProjectUserServices";
+import AddProduct from "../Product/AddProduct";
+import FeedbackServices from "../../services/FeedbackServices";
 
 import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
@@ -10,16 +9,17 @@ import Typography from "@material-ui/core/Typography";
 import Button from "@material-ui/core/Button";
 import IconButton from "@material-ui/core/IconButton";
 import HomeIcon from "@material-ui/icons/Home";
-import ViewListIcon from '@material-ui/icons/ViewList';
+import ViewListIcon from "@material-ui/icons/ViewList";
 import BookIcon from "@material-ui/icons/Book";
-import BookOutlinedIcon from "@material-ui/icons/BookOutlined";
+import ArchiveIcon from "@material-ui/icons/Archive";
+import DeleteIcon from "@material-ui/icons/Delete";
 import TextField from "@material-ui/core/TextField";
 import Modal from "@material-ui/core/Modal";
 import Backdrop from "@material-ui/core/Backdrop";
 import Fade from "@material-ui/core/Fade";
 import Pagination from "@material-ui/lab/Pagination";
 import FeedbackIcon from "@material-ui/icons/Feedback";
-import FeedbackOutlinedIcon from "@material-ui/icons/FeedbackOutlined";
+import AddBoxIcon from "@material-ui/icons/AddBox";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import Snackbar from "@material-ui/core/Snackbar";
 import CloseIcon from "@material-ui/icons/Close";
@@ -28,9 +28,8 @@ import SettingsIcon from "@material-ui/icons/Settings";
 import ShopIcon from "@material-ui/icons/Shop";
 import SearchIcon from "@material-ui/icons/Search";
 import InputBase from "@material-ui/core/InputBase";
-
+import PeopleAltIcon from "@material-ui/icons/PeopleAlt";
 import EditIcon from "@material-ui/icons/Edit";
-import DeleteIcon from "@material-ui/icons/Delete";
 import InputLabel from "@material-ui/core/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem";
 import FormControl from "@material-ui/core/FormControl";
@@ -50,9 +49,7 @@ import Card from "@material-ui/core/Card";
 import CardActions from "@material-ui/core/CardActions";
 import CardContent from "@material-ui/core/CardContent";
 
-const services = new ProjectAdminServices();
-const userServices = new ProjectUserServices();
-const feedbackServices = new ProjectFeedbackServices();
+const feedbackServices = new FeedbackServices();
 
 const MobileRegex = RegExp(/^[0-9]{11}$/i);
 const PinCodeRegex = RegExp(/^[0-9]{7}$/i);
@@ -66,31 +63,13 @@ export default class AdminDashboard extends Component {
     this.state = {
       Feedback: [],
       //
-      CustomerID: 0,
-      InsertionDate: "",
-      RoomType: "",
-      RoomScenerio: "",
-      RoomPrice: 0,
-      TotalRoomPrice: 0,
-      CustomerName: "",
-      Contact: "",
-      EmailID: "",
-      Address: "",
-      Age: "",
-      CheckInTime: "",
-      CheckOutTime: "",
-      IdProof: "",
-      IDProofList: ["Adhar Card", "Driving Licence", "Voting Card"],
-      IdNumber: "",
-      PinCode: "",
-      IsPaid: false,
+
       //
       Message: "",
       //
       NumberOfRecordPerPage: 6,
       PageNumber: 1,
-      JobPageNumber: 1,
-      BookingPageNumber: 1,
+
       FeedbackPageNumber: 1,
       //
       TotalPages: 0,
@@ -98,14 +77,17 @@ export default class AdminDashboard extends Component {
 
       open: false,
       OpenEdit: false, // Open Editing Booking Model
-      MenuOpen: false,
       OpenLoader: false,
       OpenSnackBar: false,
 
-      OpenShow: true,
-      OpenApplication: false,
+      OpenHome: true,
+      OpenAddProduct: false,
+      OpenArchive: false,
       OpenTrash: false,
+      OpenCustomerList: false,
+      OpenOrderList: false,
       OpenFeedBack: false,
+
       Update: false,
       ShowApplicantInfo: false,
       OpenBookModel: false, //Editing Booking Application
@@ -131,25 +113,7 @@ export default class AdminDashboard extends Component {
     };
     // debugger;
     this.setState({ OpenLoader: true });
-    services
-      .GetCustomerDetail(data)
-      .then((data) => {
-        console.log("GetCustomerDetail Data : ", data);
-        this.setState({
-          BookingList: data.data.data,
-          OpenLoader: false,
-          OpenSnackBar: true,
-          Message: data.data.message,
-        });
-      })
-      .catch((error) => {
-        console.log("GetCustomerDetail Error : ", error);
-        this.setState({
-          OpenLoader: false,
-          OpenSnackBar: true,
-          Message: "Something Went Wrong",
-        });
-      });
+    
   }
 
   GetFeedBack = async (CurrentPage) => {
@@ -201,47 +165,8 @@ export default class AdminDashboard extends Component {
     ) {
       console.log("Acceptable");
       this.setState({ OpenLoader: true });
-      let data = {
-        // TotalRoom, AvailableRoom
-        totalRoom: Number(state.TotalRoom),
-        //TotalAcRoom, AvailableAcRoom
-        totalAcRoom: Number(state.AcRoom),
-        //TotalSingleBedAcRoom, AvailableSingleBedAcRoom, SingleBedAcRoomPrice
-        totalSingleBedAcRoom: Number(state.NoOfAcSingleBedRoom),
-        singleBedAcRoomPrice: Number(state.AcSingleBedRoomPrice),
-        //TotalDoubleBedAcRoom, AvailableDoubleBedAcRoom, DoubleBedAcRoomPrice
-        totalDoubleBedAcRoom: Number(state.NoOfAcDoubleBedRoom),
-        doubleBedAcRoomPrice: Number(state.AcDoubleBedRoomPrice),
-        //TotalNonAcRoom, AvailableNonAcRoom
-        totalNonAcRoom: Number(state.NonAcRoom),
-        //TotalSingleBedNonAcRoom, AvailableSingleBedNonAcRoom, SingleBedNonAcRoomPrice
-        totalSingleBedNonAcRoom: Number(state.NoOfNonAcSingleBedRoom),
-        singleBedNonAcRoomPrice: Number(state.NonAcSingleBedRoomPrice),
-        //DoubleBedNonAcRoom, AvailableTotalNonAcRoom, DoubleBedNonAcRoomPrice
-        totalDoubleBedNonAcRoom: Number(state.NoOfNonAcDoubleBedRoom),
-        doubleBedNonAcRoomPrice: Number(state.NonAcDoubleBedRoomPrice),
-      };
 
-      services
-        .InsertMasterData(data)
-        .then((data) => {
-          console.log("InsertMasterData data : ", data);
-          this.setState({
-            OpenSnackBar: true,
-            Message: data.data.message,
-            OpenLoader: false,
-          });
-          this.GetMasterData();
-        })
-        .catch((error) => {
-          console.log("InsertMasterData Error : ", error);
-          this.setState({
-            OpenLoader: false,
-            OpenSnackBar: true,
-            Message: "Please Fill Required Field",
-          });
-          this.GetMasterData();
-        });
+      
     } else {
       console.log("Please Fill Required Field");
       this.setState({
@@ -303,28 +228,7 @@ export default class AdminDashboard extends Component {
         pinCode: State.Pincode,
       };
 
-      userServices
-        .UpdateCustomerDetail(data)
-        .then((data) => {
-          this.setState({
-            OpenSnackBar: true,
-            OpenEdit: false,
-            OpenBookModel: false,
-            Message: data.data.message,
-          });
-          this.GetBookingList(this.state.BookingPageNumber);
-          this.handleClose();
-        })
-        .catch((error) => {
-          this.setState({
-            OpenSnackBar: true,
-            OpenEdit: false,
-            OpenBookModel: false,
-            Message: "Something Went Wrong",
-          });
-          this.GetBookingList(this.state.BookingPageNumber);
-          this.handleClose();
-        });
+      
     } else {
       console.log("Please Fill Required Field");
       this.setState({
@@ -361,7 +265,7 @@ export default class AdminDashboard extends Component {
 
     this.setState({
       open: true,
-      OpenShow: true,
+      OpenHome: true,
       OpenTrash: false,
       JobPageNumber: 1,
       JobID: 0,
@@ -390,18 +294,7 @@ export default class AdminDashboard extends Component {
       let data = {
         customerID: CustomerID,
       };
-      userServices
-        .PayCustomerBill(data)
-        .then((data) => {
-          console.log("handlePayCustomerBill Data : ", data);
-          this.setState({ OpenEdit: false });
-          this.GetBookingList(this.state.BookingPageNumber);
-        })
-        .catch((error) => {
-          console.log("handlePayCustomerBill Error : ", error);
-          this.setState({ OpenEdit: false });
-          this.GetBookingList(this.state.BookingPageNumber);
-        });
+     
     } else {
       console.log("Invalid Customer ID");
     }
@@ -425,40 +318,96 @@ export default class AdminDashboard extends Component {
     this.setState({ OpenSnackBar: false });
   };
 
-  handleOpenList = (e) => {
+  handleOpenHomeNav = (e) => {
     console.log("Handle Open List Calling ... ");
 
     this.setState({
-      OpenShow: true,
-      OpenApplication: false,
+      OpenHome: true,
+      OpenAddProduct: false,
+      OpenArchive: false,
+      OpenTrash: false,
+      OpenCustomerList: false,
+      OpenOrderList: false,
       OpenFeedBack: false,
-      BookingPageNumber: 1,
-      FeedbackPageNumber: 1,
     });
-
-    this.GetMasterData();
   };
 
-  handleOpenBookingList = async () => {
-    console.log("handleOpenBookingList Calling...");
-    this.GetBookingList(this.state.BookingPageNumber);
+  handleOpenAddProductNav = () => {
+    console.log("Handle Add Product Nav Calling ... ");
+
     this.setState({
-      OpenShow: false,
-      OpenApplication: true,
+      OpenHome: false,
+      OpenAddProduct: true,
+      OpenArchive: false,
+      OpenTrash: false,
+      OpenCustomerList: false,
+      OpenOrderList: false,
       OpenFeedBack: false,
-      FeedbackPageNumber: 1,
-      JobPageNumber: 1,
     });
   };
 
-  handleFeedBackOpen = (e) => {
+  handleOpenArchiveNav = () => {
+    console.log("Handle Open Archive Nav Calling ... ");
+
+    this.setState({
+      OpenHome: false,
+      OpenAddProduct: false,
+      OpenArchive: true,
+      OpenTrash: false,
+      OpenCustomerList: false,
+      OpenOrderList: false,
+      OpenFeedBack: false,
+    });
+  };
+
+  handleOpenTrashNav = () => {
+    console.log("Handle Open Trash Nav Calling...");
+    this.setState({
+      OpenHome: false,
+      OpenAddProduct: false,
+      OpenArchive: false,
+      OpenTrash: true,
+      OpenCustomerList: false,
+      OpenOrderList: false,
+      OpenFeedBack: false,
+    });
+  };
+
+  handleOpenCustomerListNav = () => {
+    console.log("Handle Open Customer List Nav Calling...");
+    this.setState({
+      OpenHome: false,
+      OpenAddProduct: false,
+      OpenArchive: false,
+      OpenTrash: false,
+      OpenCustomerList: true,
+      OpenOrderList: false,
+      OpenFeedBack: false,
+    });
+  };
+
+  handleOpenOrderListNav = () => {
+    console.log("Handle Open Customer List Nav Calling...");
+    this.setState({
+      OpenHome: false,
+      OpenAddProduct: false,
+      OpenArchive: false,
+      OpenTrash: false,
+      OpenCustomerList: false,
+      OpenOrderList: true,
+      OpenFeedBack: false,
+    });
+  };
+
+  handleOpenFeedBackNav = (e) => {
     console.log("Handle FeedBack Open Calling...");
-    this.GetFeedBack(this.state.FeedbackPageNumber);
     this.setState({
-      OpenShow: false,
-      OpenApplication: false,
-      JobPageNumber: 1,
-      BookingPageNumber: 1,
+      OpenHome: false,
+      OpenAddProduct: false,
+      OpenArchive: false,
+      OpenTrash: false,
+      OpenCustomerList: false,
+      OpenOrderList: false,
       OpenFeedBack: true,
     });
   };
@@ -741,16 +690,7 @@ export default class AdminDashboard extends Component {
 
   handleDeleteBookingApplication = async (ID) => {
     console.log("handleDeleteBookingApplication Calling ..... ID :", ID);
-    userServices
-      .DeleteCustomerDetail(ID)
-      .then((data) => {
-        console.log("handleDeleteBookingApplication Data : ", data);
-        this.GetBookingList(this.state.BookingPageNumber);
-      })
-      .catch((error) => {
-        console.log("handleDeleteBookingApplication Error : ", error);
-        this.GetBookingList(this.state.BookingPageNumber);
-      });
+    
   };
 
   handleApplicationDeletion = async (ID) => {
@@ -817,14 +757,14 @@ export default class AdminDashboard extends Component {
   handlePaging = async (e, value) => {
     console.log("Current Page : ", value);
 
-    if (this.state.OpenShow) {
+    if (this.state.OpenHome) {
       this.setState({
         JobPageNumber: value,
         BookingPageNumber: 1,
         FeedbackPageNumber: 1,
       });
       // await this.GetJobs(value)
-    } else if (this.state.OpenApplication) {
+    } else if (this.state.OpenAddProduct) {
       this.setState({
         BookingPageNumber: value,
         JobPageNumber: 1,
@@ -907,14 +847,14 @@ export default class AdminDashboard extends Component {
     this.setState({ open: true });
   };
 
-  OpenCurrentInfo = () => {
+  OpenHomeNav = () => {
     let state = this.state;
     return <div className="Sub-OpenCurrentInfo"></div>;
   };
 
-  OpenBookingList = () => {
+  OpenAddProductNav = () => {
     let state = this.state;
-    return <div></div>;
+    return <AddProduct />;
   };
 
   handleBookingList = (e) => {
@@ -927,7 +867,23 @@ export default class AdminDashboard extends Component {
       : null;
   };
 
-  OpenFeedBackList = () => {
+  OpenFeedBackNav = () => {
+    return <div></div>;
+  };
+
+  OpenArchiveNav = () => {
+    return <div></div>;
+  };
+
+  OpenTrashNav = () => {
+    return <div></div>;
+  };
+
+  OpenCustomerListNav = () => {
+    return <div></div>;
+  };
+
+  OpenOrderListNav = () => {
     return <div></div>;
   };
 
@@ -950,7 +906,7 @@ export default class AdminDashboard extends Component {
                     boxSizing: "border-box",
                   }}
                 >
-                  E-Commerce &nbsp;
+                  E-Shopping &nbsp;
                   <div style={{ margin: "3px 0 0 0" }}>
                     <ShopIcon />
                   </div>
@@ -986,28 +942,67 @@ export default class AdminDashboard extends Component {
           <div className="Body">
             <div className="Sub-Body">
               <div className="SubBody11">
-                <div className="NavButton1" onClick={this.handleOpenList}>
+                <div
+                  className={state.OpenHome ? "NavButton1" : "NavButton2"}
+                  onClick={this.handleOpenHomeNav}
+                >
                   <IconButton edge="start" className="NavBtn" color="inherit">
                     <HomeIcon style={{ color: "white" }} />
                   </IconButton>
-                  <div className="NavButtonText">Jobs</div>
+                  <div className="NavButtonText">Home</div>
                 </div>
 
                 <div
+                  className={state.OpenAddProduct ? "NavButton1" : "NavButton2"}
+                  onClick={this.handleOpenAddProductNav}
+                >
+                  <IconButton edge="start" className="NavBtn" color="inherit">
+                    <AddBoxIcon style={{ color: "white" }} />
+                  </IconButton>
+                  <div className="NavButtonText">Add Product</div>
+                </div>
+                <div
+                  className={state.OpenArchive ? "NavButton1" : "NavButton2"}
+                  onClick={this.handleOpenArchiveNav}
+                >
+                  <IconButton edge="start" className="NavBtn" color="inherit">
+                    <ArchiveIcon style={{ color: "white" }} />
+                  </IconButton>
+                  <div className="NavButtonText">Archive</div>
+                </div>
+                <div
+                  className={state.OpenTrash ? "NavButton1" : "NavButton2"}
+                  onClick={this.handleOpenTrashNav}
+                >
+                  <IconButton edge="start" className="NavBtn" color="inherit">
+                    <DeleteIcon style={{ color: "white" }} />
+                  </IconButton>
+                  <div className="NavButtonText">Trash</div>
+                </div>
+                <div
                   className={
-                    state.OpenApplication ? "NavButton1" : "NavButton2"
+                    state.OpenCustomerList ? "NavButton1" : "NavButton2"
                   }
-                  onClick={this.handleOpenBookingList}
+                  onClick={this.handleOpenCustomerListNav}
+                >
+                  <IconButton edge="start" className="NavBtn" color="inherit">
+                    <PeopleAltIcon style={{ color: "white" }} />
+                  </IconButton>
+
+                  <div className="NavButtonText">Customer List</div>
+                </div>
+                <div
+                  className={state.OpenOrderList ? "NavButton1" : "NavButton2"}
+                  onClick={this.handleOpenOrderListNav}
                 >
                   <IconButton edge="start" className="NavBtn" color="inherit">
                     <ViewListIcon style={{ color: "white" }} />
                   </IconButton>
-                  <div className="NavButtonText">Confirm</div>
+                  <div className="NavButtonText">Order List</div>
                 </div>
-
                 <div
                   className={state.OpenFeedBack ? "NavButton1" : "NavButton2"}
-                  onClick={this.handleFeedBackOpen}
+                  onClick={this.handleOpenFeedBackNav}
                 >
                   <IconButton edge="start" className="NavBtn" color="inherit">
                     <FeedbackIcon style={{ color: "white" }} />
@@ -1016,15 +1011,25 @@ export default class AdminDashboard extends Component {
                   <div className="NavButtonText">FeedBack</div>
                 </div>
               </div>
-              <div className={state.MenuOpen ? "SubBody21" : "SubBody22"}>
-                <div style={{ height: "90%", width: "90%" }}>
-                  {state.OpenShow
-                    ? this.OpenCurrentInfo()
-                    : state.OpenApplication
-                    ? this.OpenBookingList()
-                    : state.OpenFeedBack
-                    ? this.OpenFeedBackList()
-                    : null}
+              <div className="SubBody21">
+                <div style={{ height: "100%", width: "100%" }}>
+                  {state.OpenHome ? (
+                    this.OpenHomeNav()
+                  ) : state.OpenAddProduct ? (
+                    this.OpenAddProductNav()
+                  ) : state.OpenFeedBack ? (
+                    this.OpenFeedBackNav()
+                  ) : state.OpenArchive ? (
+                    this.OpenArchiveNav
+                  ) : state.OpenTrash ? (
+                    this.OpenTrashNav
+                  ) : state.OpenCustomerList ? (
+                    this.OpenCustomerListNav
+                  ) : state.OpenOrderList ? (
+                    this.OpenOrderListNav
+                  ) : (
+                    <></>
+                  )}
                 </div>
 
                 <Modal

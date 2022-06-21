@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "./AddProduct.scss";
+import "./AddProduct.css";
 import ProductServices from "../../services/ProductServices";
 
 import DefaultImage from "../Asserts/img.png";

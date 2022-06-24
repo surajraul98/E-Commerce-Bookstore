@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "./GetProduct.scss";
+import "./GetProduct.css";
 import ProductServices from "../../services/ProductServices";
 import CartServices from "../../services/CartServices";
 import WishListServices from "../../services/WishListServices";

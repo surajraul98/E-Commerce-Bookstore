@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 
-import "./UserDashBoard.scss";
+import "./UserDashBoard.css";
 import GetProduct from "../Product/GetProduct";
 
 import FeedbackServices from "../../services/FeedbackServices";

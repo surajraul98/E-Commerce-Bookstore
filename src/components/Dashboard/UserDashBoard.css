@@ -1,12 +1,12 @@
 .UserDashBoard-Container {
     height: 100%;
     width: 100%;
-}
-.UserDashBoard-Container .Sub-Container {
+  }
+  .UserDashBoard-Container .Sub-Container {
     height: 100%;
     min-width: 1517.5px;
-}
-.UserDashBoard-Container .Sub-Container .Body {
+  }
+  .UserDashBoard-Container .Sub-Container .Body {
     height: 90.5%;
     width: 100%;
     display: flex;
@@ -14,13 +14,13 @@
     justify-content: center;
     align-items: center;
     color: white;
-}
-.UserDashBoard-Container .Sub-Container .Body .Sub-Body {
+  }
+  .UserDashBoard-Container .Sub-Container .Body .Sub-Body {
     height: 100%;
     width: 100%;
     display: flex;
-}
-.UserDashBoard-Container .Sub-Container .Body .Sub-Body .SubBody11 {
+  }
+  .UserDashBoard-Container .Sub-Container .Body .Sub-Body .SubBody11 {
     width: 20%;
     height: 100%;
     padding: 5px 0 0 0;
@@ -28,22 +28,22 @@
     transition: width 0.3s;
     z-index: 1;
     background-color: #202020;
-}
-.UserDashBoard-Container .Sub-Container .Body .Sub-Body .SubBody11 .MuiTreeItem-iconContainer {
+  }
+  .UserDashBoard-Container .Sub-Container .Body .Sub-Body .SubBody11 .MuiTreeItem-iconContainer {
     height: 0%;
     width: 0%;
-}
-.UserDashBoard-Container .Sub-Container .Body .Sub-Body .SubBody11 .MuiTreeItem-label {
+  }
+  .UserDashBoard-Container .Sub-Container .Body .Sub-Body .SubBody11 .MuiTreeItem-label {
     font-weight: 500;
     margin: 0 0 10px 0;
-}
-.UserDashBoard-Container .Sub-Container .Body .Sub-Body .SubBody11 .MuiTreeItem-group {
+  }
+  .UserDashBoard-Container .Sub-Container .Body .Sub-Body .SubBody11 .MuiTreeItem-group {
     margin: 0;
     padding: 0;
     margin-left: 30px;
     text-align: initial;
-}
-.UserDashBoard-Container .Sub-Container .Body .Sub-Body .SubBody12 {
+  }
+  .UserDashBoard-Container .Sub-Container .Body .Sub-Body .SubBody12 {
     width: 5%;
     height: 100%;
     padding: 5px 0 0 0;
@@ -53,8 +53,8 @@
     display: flex;
     flex-direction: column;
     background-color: #202020;
-}
-.UserDashBoard-Container .Sub-Container .Body .Sub-Body .SubBody21 {
+  }
+  .UserDashBoard-Container .Sub-Container .Body .Sub-Body .SubBody21 {
     width: 80%;
     height: 100%;
     z-index: 1;
@@ -62,9 +62,9 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #202020 af;
-}
-.UserDashBoard-Container .Sub-Container .Body .Sub-Body .SubBody22 {
+    background-color: #202020af;
+  }
+  .UserDashBoard-Container .Sub-Container .Body .Sub-Body .SubBody22 {
     width: 95%;
     height: 100%;
     z-index: 1;
@@ -72,9 +72,43 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #202020 af;
-}
-.UserDashBoard-Container .Sub-Container .Body .Sub-Body .Sub-OpenCurrentInfo {
+  }
+  .UserDashBoard-Container .Sub-Container .Body .Sub-Body .SubBody22 .OpenUserDetailNav-Container {
+    height: inherit;
+    width: inherit;
+    background-color: #202020af;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .UserDashBoard-Container .Sub-Container .Body .Sub-Body .SubBody22 .OpenUserDetailNav-Container .OpenUserDetailNav-SubContainer {
+    height: 60%;
+    width: 60%;
+    border: 0.5px solid white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background-color: white;
+  }
+  .UserDashBoard-Container .Sub-Container .Body .Sub-Body .SubBody22 .OpenUserAddressNav-Container {
+    height: inherit;
+    width: inherit;
+    background-color: #202020af;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .UserDashBoard-Container .Sub-Container .Body .Sub-Body .SubBody22 .OpenUserAddressNav-Container .OpenUserAddressNav-SubContainer {
+    height: 90%;
+    width: 80%;
+    background-color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+  .UserDashBoard-Container .Sub-Container .Body .Sub-Body .Sub-OpenCurrentInfo {
     width: 100%;
     height: 100%;
     background-color: black;
@@ -82,8 +116,8 @@
     justify-content: center;
     align-items: center;
     flex-direction: row;
-}
-.UserDashBoard-Container .Sub-Container .Body .Sub-Body .NavButton1 {
+  }
+  .UserDashBoard-Container .Sub-Container .Body .Sub-Body .NavButton1 {
     height: 50px;
     display: flex;
     justify-content: center;
@@ -92,19 +126,26 @@
     cursor: pointer;
     padding-left: 10px;
     background-color: rgba(112, 111, 110, 0.253);
-}
-.UserDashBoard-Container .Sub-Container .Body .Sub-Body .NavButton1 .NavButtonText {
+  }
+  .UserDashBoard-Container .Sub-Container .Body .Sub-Body .NavButton1 .NavButtonText {
     width: 80%;
     font-family: "Roboto";
     font-weight: 500;
     display: flex;
     justify-content: center;
     align-items: center;
-}
-.UserDashBoard-Container .Sub-Container .Body .Sub-Body .NavButton1:hover {
+    color: yellow;
+  }
+  .UserDashBoard-Container .Sub-Container .Body .Sub-Body .NavButton1:hover {
     background-color: rgba(112, 111, 110, 0.253);
-}
-.UserDashBoard-Container .Sub-Container .Body .Sub-Body .NavButton2 {
+  }
+  .UserDashBoard-Container .Sub-Container .Body .Sub-Body .NavButton11 {
+    color: yellow;
+  }
+  .UserDashBoard-Container .Sub-Container .Body .Sub-Body .NavButton22 {
+    color: white;
+  }
+  .UserDashBoard-Container .Sub-Container .Body .Sub-Body .NavButton2 {
     height: 50px;
     display: flex;
     justify-content: center;
@@ -112,24 +153,24 @@
     flex-direction: row;
     cursor: pointer;
     padding-left: 10px;
-}
-.UserDashBoard-Container .Sub-Container .Body .Sub-Body .NavButton2 .NavButtonText {
+  }
+  .UserDashBoard-Container .Sub-Container .Body .Sub-Body .NavButton2 .NavButtonText {
     width: 80%;
     font-family: "Roboto";
     font-weight: 500;
     display: flex;
     justify-content: center;
     align-items: center;
-}
-.UserDashBoard-Container .Sub-Container .Body .Sub-Body .NavButton2:hover {
+  }
+  .UserDashBoard-Container .Sub-Container .Body .Sub-Body .NavButton2:hover {
     background-color: rgba(112, 111, 110, 0.253);
-}
-.Input-Field {
+  }
+  .Input-Field {
     display: flex;
     width: 450px;
     margin: 7px;
-}
-.Input-Field .Text {
+  }
+  .Input-Field .Text {
     width: 170px;
     margin: 8px 10px 8px 0;
     font-size: medium;
@@ -138,15 +179,15 @@
     display: flex;
     justify-content: flex-start;
     align-items: center;
-}
-.Input-Field .Text-Input {
+  }
+  .Input-Field .Text-Input {
     width: 350px;
-}
-.Input-Field1 {
+  }
+  .Input-Field1 {
     width: 500px;
     display: flex;
-}
-.Input-Field1 .Text {
+  }
+  .Input-Field1 .Text {
     width: 50%;
     margin: 8px 0 8px 0;
     font-size: 20px;
@@ -155,8 +196,8 @@
     display: flex;
     justify-content: flex-end;
     align-items: center;
-}
-.Input-Field1 .Text-Input {
+  }
+  .Input-Field1 .Text-Input {
     width: 50%;
     font-size: 20px;
     color: blue;
@@ -165,8 +206,8 @@
     display: flex;
     justify-content: center;
     align-items: center;
-}
-.Header {
+  }
+  .Header {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -174,16 +215,16 @@
     font-weight: 500;
     background-color: black;
     color: white;
-}
-.Row {
+  }
+  .Row {
     display: flex;
     justify-content: center;
     align-items: center;
     font-family: "Roboto";
     font-weight: 500;
     font-size: 15px;
-}
-.Row1 {
+  }
+  .Row1 {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -192,8 +233,8 @@
     font-size: 12px;
     text-overflow: ellipsis;
     margin: 0 5px;
-}
-.search {
+  }
+  .search {
     position: relative;
     border-radius: 10px;
     background-color: rgba(255, 255, 255, 0.151);
@@ -201,8 +242,8 @@
     width: 30%;
     height: 42px;
     display: flex;
-}
-.search .searchIcon {
+  }
+  .search .searchIcon {
     padding: 0 10px;
     width: 8%;
     height: 100%;
@@ -210,15 +251,16 @@
     display: flex;
     align-items: center;
     justify-content: center;
-}
-.search .inputRoot {
+  }
+  .search .inputRoot {
     color: inherit;
     width: 92%;
-}
-.search .inputInput {
+  }
+  .search .inputInput {
     padding: 10px 10px 10px 0;
     width: 100%;
-}
-.search:is(:hover) {
+  }
+  .search:is(:hover) {
     background-color: rgba(255, 255, 255, 0.212);
-}
+  }
+  

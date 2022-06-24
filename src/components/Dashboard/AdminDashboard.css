@@ -62,6 +62,7 @@
     justify-content: center;
     align-items: center;
     background-color: white;
+    width: 96%;
 }
 .AdminDashboard-Container .Sub-Container .Body .Sub-Body .SubBody22 {
     width: 95%;
@@ -86,7 +87,7 @@
 .AdminDashboard-Container .Sub-Container .Body .Sub-Body .NavButton1 .NavButtonText {
     color: yellow;
     width: 80%;
-    font-family: "Roboto";
+    font-family: 'Roboto';
     font-weight: 500;
     display: flex;
     justify-content: center;
@@ -106,7 +107,7 @@
 }
 .AdminDashboard-Container .Sub-Container .Body .Sub-Body .NavButton2 .NavButtonText {
     width: 80%;
-    font-family: "Roboto";
+    font-family: 'Roboto';
     font-weight: 500;
     display: flex;
     justify-content: center;
@@ -121,7 +122,7 @@
     justify-content: center;
     align-items: center;
     font-size: 50px;
-    font-family: "Roboto";
+    font-family: 'Roboto';
     font-weight: 500;
 }
 .Note {
@@ -132,7 +133,7 @@
     align-items: center;
     font-size: 20px;
     font-weight: 500;
-    font-family: "Roboto";
+    font-family: 'Roboto';
     color: red;
 }
 .Setting {
@@ -155,7 +156,7 @@
     justify-content: center;
     align-items: center;
     font-size: 20px;
-    font-family: "Roboto";
+    font-family: 'Roboto';
     font-weight: 500;
     margin: 0 0 20px 0;
 }
@@ -173,7 +174,7 @@
     justify-content: center;
     align-items: center;
     font-size: 20px;
-    font-family: "Roboto";
+    font-family: 'Roboto';
     font-weight: 500;
     margin: 0 0 20px 0;
 }
@@ -192,7 +193,7 @@
 .Input-Field .Text {
     width: 200px;
     margin: 8px 10px 8px 0;
-    font-family: "Roboto";
+    font-family: 'Roboto';
     font-weight: 500;
 }
 .Input-Field .Text-Input {
@@ -202,7 +203,8 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    font-family: "Roboto";
+    font-family: 'Roboto';
+   
     font-weight: 500;
     background-color: black;
     color: white;
@@ -211,14 +213,14 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    font-family: "Roboto";
+    font-family: 'Roboto';
     font-weight: 500;
 }
 .Row1 {
     display: flex;
     justify-content: center;
     align-items: center;
-    font-family: "Roboto";
+    font-family: 'Roboto';
     font-weight: 500;
     font-size: 12px;
     text-overflow: ellipsis;

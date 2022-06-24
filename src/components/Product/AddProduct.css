@@ -4,33 +4,34 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: white;
-}
-.AddProduct-Container .AddProduct-SubContainer {
-    height: 80%;
-    width: 80%;
+    background-color: #202020af;
+  }
+  .AddProduct-Container .AddProduct-SubContainer {
+    height: 90%;
+    width: 90%;
     display: flex;
     justify-content: center;
     align-items: center;
-}
-.AddProduct-Container .AddProduct-SubContainer .AddProduct-Box1 {
-    height: 100%;
-    width: 40%;
-    border: 0.5px solid lightgray;
+    background-color: white;
+  }
+  .AddProduct-Container .AddProduct-SubContainer .AddProduct-Box1 {
+    height: 90%;
+    width: 35%;
     border-radius: 10px;
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column;
-}
-.AddProduct-Container .AddProduct-SubContainer .AddProduct-Box1 .ImageField {
+  }
+  .AddProduct-Container .AddProduct-SubContainer .AddProduct-Box1 .ImageField {
     height: 82%;
     width: 90%;
     display: flex;
     justify-content: center;
     align-items: center;
-}
-.AddProduct-Container .AddProduct-SubContainer .AddProduct-Box2 {
-    height: 100%;
-    width: 60%;
-}
+  }
+  .AddProduct-Container .AddProduct-SubContainer .AddProduct-Box2 {
+    height: 90%;
+    width: 45%;
+  }
+  

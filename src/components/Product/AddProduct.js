@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "./AddProduct.scss";
+import "./AddProduct.css";
 import ProductServices from "../../services/ProductServices";
 import Backdrop from "@material-ui/core/Backdrop";
 import CircularProgress from "@material-ui/core/CircularProgress";

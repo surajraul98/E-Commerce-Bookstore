@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import "./AdminDashboard.scss";
+import "./AdminDashboard.css";
 import AddProduct from "../Product/AddProduct";
 import GetProduct from "../Product/GetProduct";
 import FeedbackServices from "../../services/FeedbackServices";

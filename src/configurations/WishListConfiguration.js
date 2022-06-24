@@ -1,8 +1,8 @@
 const ParentConfiguration = require("./ParentConfiguration");
 
 module.exports = {
-  AddToWishList: ParentConfiguration.Parent + "",
-  GetAllWishListDetails: ParentConfiguration.Parent + "",
-  RemoveWishListProduct: ParentConfiguration.Parent + "",
-  MoveToCard: ParentConfiguration.Parent + "",
+  AddToWishList: ParentConfiguration.Parent + "api/WishList/AddToWishList",
+  GetAllWishListDetails: ParentConfiguration.Parent + "api/WishList/GetAllWishListDetails",
+  RemoveWishListProduct: ParentConfiguration.Parent + "api/WishList/RemoveWishListProduct",
+  MoveToCard: ParentConfiguration.Parent + "api/WishList/MoveToCard",
 };

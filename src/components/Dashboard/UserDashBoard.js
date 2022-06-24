@@ -1,6 +1,12 @@
 import React, { Component } from "react";
 import "./UserDashBoard.scss";
-import ProjectFeedbackServices from "../../services/FeedbackServices";
+import GetProduct from "../Product/GetProduct";
+
+import FeedbackServices from "../../services/FeedbackServices";
+import ProductServices from "../../services/ProductServices";
+import CartServices from "../../services/CartServices";
+import WishListServices from "../../services/WishListServices";
+import AuthServices from "../../services/AuthServices";
 
 import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
@@ -26,12 +32,6 @@ import BookmarkIcon from "@material-ui/icons/Bookmark";
 import SettingsIcon from "@material-ui/icons/Settings";
 import ShopIcon from "@material-ui/icons/Shop";
 
-import Card from "@material-ui/core/Card";
-import CardActionArea from "@material-ui/core/CardActionArea";
-import CardActions from "@material-ui/core/CardActions";
-import CardContent from "@material-ui/core/CardContent";
-import CardMedia from "@material-ui/core/CardMedia";
-
 import InputLabel from "@material-ui/core/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem";
 import FormControl from "@material-ui/core/FormControl";
@@ -52,7 +52,11 @@ import TableRow from "@material-ui/core/TableRow";
 import Paper from "@material-ui/core/Paper";
 import Settings from "@material-ui/icons/Settings";
 
-const feedbackServices = new ProjectFeedbackServices();
+const feedbackServices = new FeedbackServices();
+const productServices = new ProductServices();
+const cartServices = new CartServices();
+const wishlistServices = new WishListServices();
+const authServices = new AuthServices();
 
 const MobileRegex = RegExp(/^[0-9]{11}$/i);
 const PinCodeRegex = RegExp(/^[0-9]{7}$/i);
@@ -65,6 +69,31 @@ export default class UserDashBoard extends Component {
     super(props);
     this.state = {
       //
+      FullName: "",
+      MobileNumber: "",
+      EmailID: "",
+      //
+      FullNameFlag: false,
+      MobileNumberFlag: false,
+      EmailIDFlag: false,
+      //
+      Address1: "",
+      Address2: "",
+      City: "",
+      Distict: "",
+      State: "",
+      Country: "",
+      Pincode: "",
+      //
+      Address1Flag: false,
+      CityFlag: false,
+      DistictFlag: false,
+      StateFlag: false,
+      CountryFlag: false,
+      PincodeFlag: false,
+      //
+      Product: [],
+      //
       FeedBack: "",
       FeedBackFlag: false,
       //
@@ -73,268 +102,229 @@ export default class UserDashBoard extends Component {
       NumberOfRecordPerPage: 6,
       //
       PageNumber: 1,
-      CurrentPage: 1,
-      BookingPageNumber: 1,
       //
       TotalPages: 0,
       TotalRecords: 0,
 
       Open: false, // Flag For Open Feedback
-      MenuOpen: false, // Open Menu
       OpenLoader: false,
       OpenSnackBar: false,
 
-      OpenShow: true, // Select Menu In Drawer Or Not
       Update: false,
+      UpdateAddress: false,
+      UpdateDetail: false,
 
-      OpenInfo: true,
-      OpenAcList: false,
-      OpenNonAcList: false,
-
-      OpenMyBooking: false,
-      OpenBookModel: false,
+      OpenUserHome: true,
+      OpenMyOrder: false,
+      OpenCard: false,
+      OpenWishList: false,
+      OpenCustomerSetting: false,
+      OpenUserDetail: false,
+      OpenUserAddress: false,
     };
   }
 
   componentWillMount() {
     console.log("Component will mount calling ... ");
+
+    this.setState({
+      OpenUserHome:
+        localStorage.getItem("OpenUserHome") === "true" ? true : false,
+      OpenMyOrder:
+        localStorage.getItem("OpenMyOrder") === "true" ? true : false,
+      OpenCard: localStorage.getItem("OpenCard") === "true" ? true : false,
+      OpenWishList:
+        localStorage.getItem("OpenWishList") === "true" ? true : false,
+      OpenCustomerSetting:
+        localStorage.getItem("OpenCustomerSetting") === "true" ? true : false,
+      OpenUserDetail:
+        localStorage.getItem("OpenUserDetail") === "true" ? true : false,
+      OpenUserAddress:
+        localStorage.getItem("OpenUserAddress") === "true" ? true : false,
+    });
+
+    if (localStorage.getItem("OpenUserHome") === "true") {
+      this.productServices(this.state.PageNumber);
+    } else if (localStorage.getItem("OpenMyOrder") === "true") {
+    } else if (localStorage.getItem("OpenCard") === "true") {
+      this.GetAllCardDetails(this.state.PageNumber);
+    } else if (localStorage.getItem("OpenWishList") === "true") {
+      this.GetAllWishListDetails(this.state.PageNumber);
+    }
+
+    this.GetCustomerDetail(Number(localStorage.getItem("Customer_UserID")));
+    this.GetCustomerAdderess(Number(localStorage.getItem("Customer_UserID")));
   }
 
-  GetBookingList(CurrentPage) {
+  //
+  productServices = async (CurrentPage) => {
+    console.log("Get Jobs List Calling ... ");
     let data = {
       pageNumber: CurrentPage,
-      numberOfRecordPerPage: 8,
+      numberOfRecordPerPage: 4,
     };
-    // debugger;
     this.setState({ OpenLoader: true });
-  }
-
-  handleCompanyName = async (e) => {
-    console.log("Selected Company Name : ", e.target.value);
-    this.setState({ CompanyName: e.target.value });
-    this.handleJobFilter(
-      this.state.PageNumber,
-      e.target.value,
-      this.state.JobStream,
-      this.state.JobField
-    );
-  };
-
-  handleFields = (event) => {
-    console.log("Selected Job Field : ", event.target.value);
-    this.setState({ JobField: event.target.value });
-    this.handleJobFilter(
-      this.state.PageNumber,
-      this.state.CompanyName,
-      this.state.JobStream,
-      event.target.value
-    );
-  };
-
-  handleMenuButton = (e) => {
-    console.log("Handle Menu Button Calling ... ");
-    this.setState({
-      MenuOpen: !this.state.MenuOpen,
-    });
-  };
-
-  handleOpen = () => {
-    console.log("Handle Open Calling ... ");
-    this.setState({
-      open: true,
-      OpenShow: true,
-      OpenArchive: false,
-      OpenTrash: false,
-      TotalPages: !this.state.OpenInsert ? 0 : this.state.TotalPages,
-    });
-  };
-
-  CheckValidity() {
-    console.log("Check Validity Calling...");
-    this.setState({
-      CustomerNameFlag: false,
-      ContactFlag: false,
-      EmailIDFlag: false,
-      AddressFlag: false,
-      AgeFlag: false,
-      CheckInTimeFlag: false,
-      CheckOutTimeFlag: false,
-      IDProofFlag: false,
-      IDNumberFlag: false,
-    });
-
-    if (this.state.CustomerName === "") {
-      this.setState({ CustomerNameFlag: true });
-    }
-    if (this.state.Contact === "") {
-      this.setState({ ContactFlag: true });
-    }
-    if (this.state.EmailID === "") {
-      this.setState({ EmailIDFlag: true });
-    }
-    if (this.state.Address === "") {
-      this.setState({ AddressFlag: true });
-    }
-    if (this.state.Age === "" || Number(this.state.Age) === 0) {
-      this.setState({ AgeFlag: true });
-    }
-    if (this.state.CheckInTime === "") {
-      this.setState({ CheckInTimeFlag: true });
-    }
-    if (this.state.CheckOutTime === "") {
-      this.setState({ CheckOutTimeFlag: true });
-    }
-    if (this.state.IDProof === "") {
-      this.setState({ IDProofFlag: true });
-    }
-    if (this.state.IDNumber === "") {
-      this.setState({ IDNumberFlag: true });
-    }
-  }
-
-  handleSubmit = () => {
-    let State = this.state;
-
-    if (State.ContactFlag || State.EmailIDFlag) {
-      return;
-    }
-
-    if (
-      State.CustomerName !== "" &&
-      (Number(State.TotalRoomPrice) === 0 || State.TotalRoomPrice === "")
-    ) {
-      console.log("Invalid Timing...");
-      this.setState({
-        CheckInTimeFlag: true,
-        CheckOutTimeFlag: true,
-        OpenSnackBar: true,
-        Message: "Please Fill Check In Time & Check Out Time.",
+    productServices
+      .GetAllProduct(data)
+      .then((data) => {
+        console.log("GetAllProduct Data : ", data);
+        if (data.data.data === null && this.state.PageNumber > 1) {
+          this.setState({ PageNumber: this.state.PageNumber - 1 });
+          this.productServices(this.state.PageNumber);
+        } else {
+          this.setState({
+            Product: data.data.data,
+            TotalPages: data.data.totalPage,
+            OpenLoader: false,
+          });
+        }
+      })
+      .catch((error) => {
+        console.log("GetAllProduct Error : ", error);
+        this.setState({ OpenLoader: false });
       });
-      return;
-    }
-
-    this.CheckValidity();
-
-    if (
-      State.CustomerName !== "" &&
-      State.Contact !== "" &&
-      State.EmailID !== "" &&
-      State.Address !== "" &&
-      State.Age !== "" &&
-      State.CheckInTime !== "" &&
-      State.CheckOutTime !== "" &&
-      State.IDProof !== "" &&
-      State.IDNumber !== ""
-    ) {
-      let data = {
-        roomType: State.RoomType,
-        roomScenerio: State.RoomScenerio,
-        roomPrice: Number(State.TotalRoomPrice),
-        customerName: State.CustomerName,
-        contact: State.Contact,
-        emailID: State.EmailID,
-        address: State.Address,
-        age: State.Age,
-        checkInTime: State.CheckInTime,
-        checkOutTime: State.CheckOutTime,
-        idProof: State.IDProof,
-        idNumber: State.IDNumber,
-        pinCode: State.Pincode,
-      };
-    } else {
-      console.log("Please Fill Required Field");
-      this.setState({
-        OpenSnackBar: true,
-        Message: "Please Fill Required Field",
-      });
-    }
   };
 
-  handleUpdate = () => {
-    let State = this.state;
-
-    if (State.ContactFlag || State.EmailIDFlag) {
-      return;
-    }
-
-    if (
-      State.CustomerName !== "" &&
-      (Number(State.TotalRoomPrice) === 0 || State.TotalRoomPrice === "")
-    ) {
-      console.log("Invalid Timing...");
-      this.setState({
-        CheckInTimeFlag: true,
-        CheckOutTimeFlag: true,
-        OpenSnackBar: true,
-        Message: "Please Fill Check In Time & Check Out Time.",
+  //
+  GetMyOrderList = async (CurrentPage) => {
+    console.log("Get My Order List Calling ... ");
+    let data = {
+      pageNumber: CurrentPage,
+      numberOfRecordPerPage: 4,
+      userID: Number(localStorage.getItem("Customer_UserID")),
+    };
+    this.setState({ OpenLoader: true });
+    cartServices
+      .GetOrderProduct(data)
+      .then((data) => {
+        console.log("GetMyOrderList Data : ", data);
+        if (data.data.data === null && this.state.PageNumber > 1) {
+          this.setState({ PageNumber: this.state.PageNumber - 1 });
+          this.GetMyOrderList(this.state.PageNumber);
+        } else {
+          this.setState({
+            Product: data.data.data,
+            TotalPages: data.data.totalPage,
+            OpenLoader: false,
+          });
+        }
+      })
+      .catch((error) => {
+        console.log("GetMyOrderList Error : ", error);
+        this.setState({ OpenLoader: false });
       });
-      return;
-    }
-
-    this.CheckValidity();
-
-    if (
-      State.CustomerName !== "" &&
-      State.Contact !== "" &&
-      State.EmailID !== "" &&
-      State.Address !== "" &&
-      State.Age !== "" &&
-      State.CheckInTime !== "" &&
-      State.CheckOutTime !== "" &&
-      State.IDProof !== "" &&
-      State.IDNumber !== ""
-    ) {
-      let data = {
-        customerID: Number(State.CustomerID),
-        roomType: State.RoomType,
-        roomScenerio: State.RoomScenerio,
-        roomPrice: Number(State.TotalRoomPrice),
-        customerName: State.CustomerName,
-        contact: State.Contact,
-        emailID: State.EmailID,
-        address: State.Address,
-        age: State.Age.toString(),
-        checkInTime: State.CheckInTime,
-        checkOutTime: State.CheckOutTime,
-        idProof: State.IDProof,
-        idNumber: State.IDNumber,
-        pinCode: State.Pincode,
-      };
-    } else {
-      console.log("Please Fill Required Field");
-      this.setState({
-        OpenSnackBar: true,
-        Message: "Please Fill Required Field",
-      });
-    }
   };
 
-  handleOpenPayModel = (CustomerID) => {
-    console.log("handleOpenPayModel Calling ... Customer ID : ", CustomerID);
-    if (CustomerID !== undefined && CustomerID !== 0) {
-      this.setState({
-        CustomerID: CustomerID,
-        Open: true,
-        OpenPayBill: true,
-        OpenBookModel: false,
+  //
+  GetAllCardDetails = async (CurrentPage) => {
+    console.log("Get All Card Details Calling ... ");
+    let data = {
+      pageNumber: CurrentPage,
+      numberOfRecordPerPage: 4,
+      userID: Number(localStorage.getItem("Customer_UserID")),
+    };
+    this.setState({ OpenLoader: true });
+    cartServices
+      .GetAllCardDetails(data)
+      .then((data) => {
+        console.log("GetAllCardDetails Data : ", data);
+        if (data.data.data === null && this.state.PageNumber > 1) {
+          this.setState({ PageNumber: this.state.PageNumber - 1 });
+          this.GetAllCardDetails(this.state.PageNumber);
+        } else {
+          this.setState({
+            Product: data.data.data,
+            TotalPages: data.data.totalPage,
+            OpenLoader: false,
+          });
+        }
+      })
+      .catch((error) => {
+        console.log("GetAllCardDetails Error : ", error);
+        this.setState({ OpenLoader: false });
       });
-    } else {
-      this.setState({ OpenSnackBar: true, Message: "Something Went Wrong" });
-    }
   };
 
-  handlePayCustomerBill = (CustomerID) => {
-    if (CustomerID !== undefined) {
-      let data = {
-        customerID: CustomerID,
-      };
-    } else {
-      console.log("Invalid Customer ID");
-    }
+  //
+  GetAllWishListDetails = async (CurrentPage) => {
+    console.log("Get All Wish List Details Calling ... ");
+    let data = {
+      pageNumber: CurrentPage,
+      numberOfRecordPerPage: 4,
+      userID: Number(localStorage.getItem("Customer_UserID")),
+    };
+    this.setState({ OpenLoader: true });
+    wishlistServices
+      .GetAllWishListDetails(data)
+      .then((data) => {
+        console.log("GetAllWishListDetails Data : ", data);
+        if (data.data.data === null && this.state.PageNumber > 1) {
+          this.setState({ PageNumber: this.state.PageNumber - 1 });
+          this.GetAllWishListDetails(this.state.PageNumber);
+        } else {
+          this.setState({
+            Product: data.data.data,
+            TotalPages: data.data.totalPage,
+            OpenLoader: false,
+          });
+        }
+      })
+      .catch((error) => {
+        console.log("GetAllWishListDetails Error : ", error);
+        this.setState({ OpenLoader: false });
+      });
   };
 
-  handleDeleteBookingApplication = async (ID) => {
-    console.log("handleDeleteBookingApplication Calling ..... ID :", ID);
+  GetCustomerDetail = async (UserID) => {
+    console.log("GetCustomerDetail Calling....");
+    authServices
+      .GetCustomerDetail(UserID)
+      .then((data) => {
+        console.log("GetCustomerDetail Data : ", data);
+        if (data.data.data !== null) {
+          this.setState({
+            FullName: data.data.data.fullName,
+            EmailID: data.data.data.emailID,
+            MobileNumber: data.data.data.mobileNumber,
+            Message: data.data.message,
+            OpenSnackBar: true,
+            UpdateDetail: true,
+          });
+        } else {
+          this.setState({ UpdateDetail: false });
+        }
+      })
+      .catch((error) => {
+        console.log("GetCustomerDetail Error : ", error);
+      });
+  };
+
+  GetCustomerAdderess = async (UserID) => {
+    console.log("GetCustomerAdderess Calling....");
+    authServices
+      .GetCustomerAdderess(UserID)
+      .then((data) => {
+        console.log("GetCustomerAdderess Data : ", data);
+        if (data.data.data !== null) {
+          this.setState({
+            Address1: data.data.data.address1,
+            Address2: data.data.data.address2,
+            City: data.data.data.city,
+            Distict: data.data.data.distict,
+            State: data.data.data.state,
+            Country: data.data.data.country,
+            Pincode: data.data.data.pincode,
+            Message: data.data.message,
+            OpenSnackBar: true,
+            UpdateAddress: true,
+          });
+        } else {
+          this.setState({ UpdateAddress: false });
+        }
+      })
+      .catch((error) => {
+        console.log("GetCustomerAdderess Error : ", error);
+      });
   };
 
   handleClose = () => {
@@ -373,24 +363,6 @@ export default class UserDashBoard extends Component {
     this.setState({ Open: !this.state.Open });
   };
 
-  handleOpenBookModel = (RoomType, RoomScenerio, RoomPrice) => {
-    console.log(
-      "handleOpenBookModel RoomType : ",
-      RoomType,
-      " RoomScenerio : ",
-      RoomScenerio,
-      " RoomPrice : ",
-      RoomPrice
-    );
-    this.setState({
-      Open: true,
-      OpenBookModel: true,
-      RoomType: RoomType,
-      RoomScenerio: RoomScenerio,
-      RoomPrice: RoomPrice,
-    });
-  };
-
   handleChanges = (e) => {
     const { name, value } = e.target;
 
@@ -398,29 +370,147 @@ export default class UserDashBoard extends Component {
       { [name]: value },
       console.log("Name : ", name, " value : ", value)
     );
+  };
 
-    if (this.state.CheckInTime !== "" && name === "CheckOutTime") {
-      const date1 = new Date(this.state.CheckInTime);
-      const date2 = new Date(value);
-      let Difference = date2.getTime() - date1.getTime();
-      let NumberOfDays = Difference / (1000 * 3600 * 24);
-      console.log("# Of Days : ", NumberOfDays);
-      if (NumberOfDays > 0) {
-        this.setState({ TotalRoomPrice: NumberOfDays * this.state.RoomPrice });
-      } else {
-        this.setState({ TotalRoomPrice: 0 });
-      }
-    } else if (this.state.CheckOutTime !== "" && name === "CheckInTime") {
-      const date2 = new Date(this.state.CheckOutTime);
-      const date1 = new Date(value);
-      let Difference = date2.getTime() - date1.getTime();
-      let NumberOfDays = Difference / (1000 * 3600 * 24);
-      console.log("# Of Days : ", NumberOfDays);
-      if (NumberOfDays > 0) {
-        this.setState({ TotalRoomPrice: NumberOfDays * this.state.RoomPrice });
-      } else {
-        this.setState({ TotalRoomPrice: 0 });
-      }
+  handleSubmitUserDetail = () => {
+    let state = this.state;
+    this.CheckUserDetailValidation();
+    if (
+      state.FullNameFlag === false &&
+      state.MobileNumberFlag === false &&
+      state.EmailIDFlag === false
+    ) {
+      console.log("Acceptable");
+      let data = {
+        isUpdate: state.UpdateDetail,
+        userID: localStorage.getItem("Customer_UserID"),
+        userName: localStorage.getItem("Customer_UserName"),
+        fullName: state.FullName,
+        emailID: state.EmailID,
+        mobileNumber: state.MobileNumber,
+      };
+      authServices
+        .AddCustomerDetail(data)
+        .then((data) => {
+          console.log("AddCustomerDetail Data : ", data);
+          this.setState({
+            OpenSnackBar: true,
+            Message: data.data.message,
+          });
+        })
+        .catch((error) => {
+          console.log("AddCustomerDetail Error : ", error);
+          this.setState({
+            OpenSnackBar: true,
+            Message: "Something Went Wrong",
+          });
+        });
+    } else {
+      console.log("Please Fill Required Field");
+    }
+  };
+
+  handleSubmitAddress = () => {
+    let state = this.state;
+    this.CheckValidation();
+    if (
+      state.Address1Flag === false &&
+      state.CityFlag === false &&
+      state.DistictFlag === false &&
+      state.StateFlag === false &&
+      state.CountryFlag === false &&
+      state.PincodeFlag === false
+    ) {
+      console.log("Acceptable");
+      let data = {
+        isUpdate: state.UpdateAddress,
+        userID: localStorage.getItem("Customer_UserID"),
+        address1: state.Address1,
+        address2: state.Address2,
+        city: state.City,
+        distict: state.Distict,
+        state: state.State,
+        country: state.Country,
+        pincode: state.Pincode,
+      };
+      authServices
+        .AddCustomerAdderess(data)
+        .then((data) => {
+          console.log("handleSubmitAddress Data :", data);
+          this.setState({
+            OpenSnackBar: true,
+            Message: data.data.message,
+          });
+          // localStorage.setItem("UserAddress", "true");
+        })
+        .catch((error) => {
+          console.log("handleSubmitAddress Error : ", error);
+          this.setState({
+            OpenSnackBar: true,
+            Message: "Something Went Wrong",
+          });
+        });
+    } else {
+      console.log("Please Fill Required Field");
+    }
+  };
+
+  CheckUserDetailValidation = () => {
+    console.log("CheckUserDetailValidation Calling....");
+    let state = this.state;
+    this.setState({
+      FullNameFlag: false,
+      MobileNumberFlag: false,
+      EmailIDFlag: false,
+    });
+
+    if (state.FullName === "") {
+      this.setState({ FullNameFlag: true });
+    }
+
+    if (state.MobileNumber === "") {
+      this.setState({ MobileNumberFlag: true });
+    }
+
+    if (state.EmailID === "") {
+      this.setState({ EmailIDFlag: true });
+    }
+  };
+
+  CheckValidation = () => {
+    console.log("Check Validation Calling....");
+    let state = this.state;
+    this.setState({
+      Address1Flag: false,
+      CityFlag: false,
+      DistictFlag: false,
+      StateFlag: false,
+      CountryFlag: false,
+      PincodeFlag: false,
+    });
+
+    if (state.Address1 === "") {
+      this.setState({ Address1Flag: true });
+    }
+
+    if (state.City === "") {
+      this.setState({ CityFlag: true });
+    }
+
+    if (state.Distict === "") {
+      this.setState({ DistictFlag: true });
+    }
+
+    if (state.State === "") {
+      this.setState({ StateFlag: true });
+    }
+
+    if (state.Country === "") {
+      this.setState({ CountryFlag: true });
+    }
+
+    if (state.Pincode === "") {
+      this.setState({ PincodeFlag: true });
     }
   };
 
@@ -483,6 +573,7 @@ export default class UserDashBoard extends Component {
     if (this.state.FeedBack) {
       let data = {
         feedback: this.state.FeedBack,
+        userID: Number(localStorage.getItem("Customer_UserID")),
       };
 
       await feedbackServices
@@ -514,57 +605,380 @@ export default class UserDashBoard extends Component {
     }
   };
 
-  handlePaging = (e, value) => {
+  handlePaging = async (e, value) => {
+    let state = this.state;
     console.log("Current Page : ", value);
-    this.handleJobFilter(
-      value,
-      this.state.CompanyName,
-      this.state.JobStream,
-      this.state.JobField
-    );
+
+    this.setState({
+      PageNumber: value,
+    });
+
+    if (state.OpenUserHome) {
+      await this.productServices(value);
+    } else if (state.OpenCard) {
+      await this.GetAllCardDetails(value);
+    } else if (state.OpenMyOrder) {
+      await this.GetMyOrderList(value);
+    } else if (state.OpenWishList) {
+      await this.GetAllWishListDetails(value);
+    }
   };
 
   SignOut = async () => {
     await localStorage.removeItem("customer_token");
+    await localStorage.removeItem("Customer_UserID");
+    await localStorage.removeItem("Customer_UserName");
+    await localStorage.removeItem("UserAddress");
+    await localStorage.removeItem("OpenUserAddress");
+    await localStorage.removeItem("OpenUserDetail");
+    await localStorage.removeItem("OpenUserHome");
+    await localStorage.removeItem("OpenMyOrder");
+    await localStorage.removeItem("OpenCard");
+    await localStorage.removeItem("OpenWishList");
+    await localStorage.removeItem("OpenCustomerSetting");
     this.props.history.push("/SignIn");
   };
 
-  handleField = (event) => {
-    console.log(
-      "Selected Name :",
-      event.target.name,
-      " Value : ",
-      event.target.value
+  //
+  handleOpenHomeNav = () => {
+    console.log("Handle Open Home Nav Calling .....");
+
+    localStorage.setItem("OpenUserHome", true);
+    localStorage.setItem("OpenMyOrder", false);
+    localStorage.setItem("OpenCard", false);
+    localStorage.setItem("OpenWishList", false);
+    localStorage.setItem("OpenCustomerSetting", false);
+    localStorage.setItem("OpenUserDetail", false);
+    localStorage.setItem("OpenUserAddress", false);
+
+    this.setState({
+      PageNumber: 1,
+      OpenUserHome: true,
+      OpenMyOrder: false,
+      OpenCard: false,
+      OpenWishList: false,
+      OpenCustomerSetting: false,
+      OpenUserDetail: false,
+      OpenUserAddress: false,
+    });
+
+    this.productServices(
+      this.state.PageNumber == 0 ? 1 : this.state.PageNumber
     );
-    const { name, value } = event.target;
-    this.setState({ [name]: value });
   };
 
-  handleOpenCurrentInfo = () => {
+  //
+  handleOpenMyOrderNav = () => {
+    console.log("Handle Open My Order Nav Calling .....");
+
+    localStorage.setItem("OpenUserHome", false);
+    localStorage.setItem("OpenMyOrder", true);
+    localStorage.setItem("OpenCard", false);
+    localStorage.setItem("OpenWishList", false);
+    localStorage.setItem("OpenCustomerSetting", false);
+    localStorage.setItem("OpenUserDetail", false);
+    localStorage.setItem("OpenUserAddress", false);
     this.setState({
-      OpenShow: true,
-      OpenInfo: true,
-      OpenMyBooking: false,
-      OpenAcList: false,
-      OpenNonAcList: false,
+      PageNumber: 1,
+      OpenUserHome: false,
+      OpenMyOrder: true,
+      OpenCard: false,
+      OpenWishList: false,
+      OpenCustomerSetting: false,
+      OpenUserDetail: false,
+      OpenUserAddress: false,
     });
-    this.GetMasterData();
+
+    this.GetMyOrderList(this.state.PageNumber == 0 ? 1 : this.state.PageNumber);
   };
 
-  handleOpenMyBooking = () => {
+  //
+  handleOpenCartNav = () => {
+    console.log("Handle Open Cart Nav Calling .....");
+
+    localStorage.setItem("OpenUserHome", false);
+    localStorage.setItem("OpenMyOrder", false);
+    localStorage.setItem("OpenCard", true);
+    localStorage.setItem("OpenWishList", false);
+    localStorage.setItem("OpenCustomerSetting", false);
+    localStorage.setItem("OpenUserDetail", false);
+    localStorage.setItem("OpenUserAddress", false);
+
     this.setState({
-      OpenShow: false,
-      OpenMyBooking: true,
+      PageNumber: 1,
+      OpenUserHome: false,
+      OpenMyOrder: false,
+      OpenCard: true,
+      OpenWishList: false,
+      OpenCustomerSetting: false,
+      OpenUserDetail: false,
+      OpenUserAddress: false,
     });
-    this.GetBookingList(this.state.BookingPageNumber);
+
+    this.GetAllCardDetails(
+      this.state.PageNumber == 0 ? 1 : this.state.PageNumber
+    );
   };
 
-  handleOpenBookAcRoom = () => {
-    this.setState({ OpenInfo: false, OpenAcList: true, OpenNonAcList: false });
+  //
+  handleOpenWishListNav = () => {
+    console.log("Handle Open Wish List Nav Calling .....");
+
+    localStorage.setItem("OpenUserHome", false);
+    localStorage.setItem("OpenMyOrder", false);
+    localStorage.setItem("OpenCard", false);
+    localStorage.setItem("OpenWishList", true);
+    localStorage.setItem("OpenCustomerSetting", false);
+    localStorage.setItem("OpenUserDetail", false);
+    localStorage.setItem("OpenUserAddress", false);
+
+    this.setState({
+      PageNumber: 1,
+      OpenUserHome: false,
+      OpenMyOrder: false,
+      OpenCard: false,
+      OpenWishList: true,
+      OpenCustomerSetting: false,
+      OpenUserDetail: false,
+      OpenUserAddress: false,
+    });
+
+    this.GetAllWishListDetails(
+      this.state.PageNumber == 0 ? 1 : this.state.PageNumber
+    );
   };
 
-  handleOpenBookNonAcRoom = () => {
-    this.setState({ OpenInfo: false, OpenAcList: false, OpenNonAcList: true });
+  //
+  handleOpenCustomerSettingNav = () => {
+    console.log("handle Open Customer Setting Nav Calling .....");
+
+    localStorage.setItem("OpenUserHome", false);
+    localStorage.setItem("OpenMyOrder", false);
+    localStorage.setItem("OpenCard", false);
+    localStorage.setItem("OpenWishList", false);
+    localStorage.setItem("OpenCustomerSetting", true);
+    localStorage.setItem("OpenUserDetail", true);
+    localStorage.setItem("OpenUserAddress", false);
+
+    this.setState({
+      OpenUserHome: false,
+      OpenMyOrder: false,
+      OpenCard: false,
+      OpenWishList: false,
+      OpenCustomerSetting: true,
+      OpenUserDetail: true,
+      OpenUserAddress: false,
+    });
+  };
+
+  //
+  handleOpenUserAddress = () => {
+    console.log("handle Open User Address Nav Calling .....");
+
+    if (localStorage.getItem("UserAddress") === "true") {
+      this.GetCustomerAdderess(localStorage.getItem("Customer_UserID"));
+    }
+
+    localStorage.setItem("OpenUserHome", false);
+    localStorage.setItem("OpenMyOrder", false);
+    localStorage.setItem("OpenCard", false);
+    localStorage.setItem("OpenWishList", false);
+    localStorage.setItem("OpenCustomerSetting", true);
+    localStorage.setItem("OpenUserDetail", false);
+    localStorage.setItem("OpenUserAddress", true);
+
+    this.setState({
+      OpenUserHome: false,
+      OpenMyOrder: false,
+      OpenCard: false,
+      OpenWishList: false,
+      OpenCustomerSetting: true,
+      OpenUserDetail: false,
+      OpenUserAddress: true,
+    });
+  };
+
+  //
+  OpenUserHomeNav = () => {
+    return (
+      <GetProduct
+        List={this.state.Product}
+        State="UserHome"
+        TotalPages={this.state.TotalPages}
+        PageNumber={this.state.PageNumber}
+        handlePaging={this.handlePaging}
+        productServices={this.productServices}
+      />
+    );
+  };
+
+  OpenMyOrderNav = () => {
+    return (
+      <GetProduct
+        List={this.state.Product}
+        State="MyOrder"
+        TotalPages={this.state.TotalPages}
+        PageNumber={this.state.PageNumber}
+        handlePaging={this.handlePaging}
+        GetMyOrderList={this.GetMyOrderList}
+      />
+    );
+  };
+
+  //
+  OpenCartNav = () => {
+    return (
+      <GetProduct
+        List={this.state.Product}
+        State="Cart"
+        TotalPages={this.state.TotalPages}
+        PageNumber={this.state.PageNumber}
+        handlePaging={this.handlePaging}
+        GetAllCardDetails={this.GetAllCardDetails}
+      />
+    );
+  };
+
+  //
+  OpenWishListNav = () => {
+    return (
+      <GetProduct
+        List={this.state.Product}
+        State="WishList"
+        TotalPages={this.state.TotalPages}
+        PageNumber={this.state.PageNumber}
+        handlePaging={this.handlePaging}
+        GetAllWishListDetails={this.GetAllWishListDetails}
+      />
+    );
+  };
+
+  //
+  OpenUserDetailNav = () => {
+    let state = this.state;
+    return (
+      <div className="OpenUserDetailNav-Container">
+        <div className="OpenUserDetailNav-SubContainer">
+          <TextField
+            label="Full Name"
+            variant="outlined"
+            style={{ margin: 20, width: 500 }}
+            size="small"
+            name="FullName"
+            value={state.FullName}
+            onChange={this.handleChanges}
+          />
+          <TextField
+            label="Email ID"
+            variant="outlined"
+            style={{ margin: 20, width: 500 }}
+            size="small"
+            name="EmailID"
+            value={state.EmailID}
+            onChange={this.handleChanges}
+          />
+          <TextField
+            label="Mobile Number"
+            variant="outlined"
+            style={{ margin: 20, width: 500 }}
+            size="small"
+            name="MobileNumber"
+            value={state.MobileNumber}
+            onChange={this.handleChanges}
+          />
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={this.handleSubmitUserDetail}
+          >
+            Confirm
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  //
+  OpenUserAddressNav = () => {
+    let state = this.state;
+    return (
+      <div className="OpenUserAddressNav-Container">
+        <div className="OpenUserAddressNav-SubContainer">
+          <TextField
+            label="Address1"
+            name="Address1"
+            variant="outlined"
+            style={{ margin: 10, width: 500 }}
+            size="small"
+            value={state.Address1}
+            onChange={this.handleChanges}
+          />
+          <TextField
+            label="Address2"
+            name="Address2"
+            variant="outlined"
+            style={{ margin: 10, width: 500 }}
+            size="small"
+            value={state.Address2}
+            onChange={this.handleChanges}
+          />
+          <TextField
+            label="City"
+            name="City"
+            variant="outlined"
+            style={{ margin: 10, width: 500 }}
+            size="small"
+            value={state.City}
+            onChange={this.handleChanges}
+          />
+          <TextField
+            label="Distict"
+            name="Distict"
+            variant="outlined"
+            style={{ margin: 10, width: 500 }}
+            size="small"
+            value={state.Distict}
+            onChange={this.handleChanges}
+          />
+          <TextField
+            label="State"
+            name="State"
+            variant="outlined"
+            style={{ margin: 10, width: 500 }}
+            size="small"
+            value={state.State}
+            onChange={this.handleChanges}
+          />
+          <TextField
+            label="Country"
+            name="Country"
+            variant="outlined"
+            style={{ margin: 10, width: 500 }}
+            size="small"
+            value={state.Country}
+            onChange={this.handleChanges}
+          />
+          <TextField
+            label="Pincode"
+            name="Pincode"
+            variant="outlined"
+            style={{ margin: "10px 0 20px 0", width: 500 }}
+            size="small"
+            value={state.Pincode}
+            onChange={this.handleChanges}
+          />
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => {
+              this.handleSubmitAddress();
+            }}
+          >
+            {state.Update ? <>Update</> : <>Submit</>}
+          </Button>
+        </div>
+      </div>
+    );
   };
 
   handleOpenMyBookingList = () => {
@@ -800,10 +1214,10 @@ export default class UserDashBoard extends Component {
             <div className="Sub-Body">
               <div className="SubBody11">
                 <div
-                  className="NavButton2"
-                  // onClick={() => {
-                  //   this.handleOpenCurrentInfo();
-                  // }}
+                  className={state.OpenUserHome ? "NavButton1" : "NavButton2"}
+                  onClick={() => {
+                    this.handleOpenHomeNav();
+                  }}
                 >
                   <IconButton edge="start" className="NavBtn" color="inherit">
                     <HomeIcon style={{ color: "white" }} />
@@ -811,10 +1225,10 @@ export default class UserDashBoard extends Component {
                   <div className="NavButtonText">Home</div>
                 </div>
                 <div
-                  className="NavButton2"
-                  // onClick={() => {
-                  //   this.handleOpenMyBooking();
-                  // }}
+                  className={state.OpenMyOrder ? "NavButton1" : "NavButton2"}
+                  onClick={() => {
+                    this.handleOpenMyOrderNav();
+                  }}
                 >
                   <IconButton edge="start" className="NavBtn" color="inherit">
                     <PaymentIcon style={{ color: "white" }} />
@@ -822,10 +1236,10 @@ export default class UserDashBoard extends Component {
                   <div className="NavButtonText">My Order</div>
                 </div>
                 <div
-                  className="NavButton2"
-                  // onClick={() => {
-                  //   this.handleOpenMyBooking();
-                  // }}
+                  className={state.OpenCard ? "NavButton1" : "NavButton2"}
+                  onClick={() => {
+                    this.handleOpenCartNav();
+                  }}
                 >
                   <IconButton edge="start" className="NavBtn" color="inherit">
                     <ShoppingCartIcon style={{ color: "white" }} />
@@ -833,10 +1247,10 @@ export default class UserDashBoard extends Component {
                   <div className="NavButtonText">Cart</div>
                 </div>
                 <div
-                  className="NavButton2"
-                  // onClick={() => {
-                  //   this.handleOpenMyBooking();
-                  // }}
+                  className={state.OpenWishList ? "NavButton1" : "NavButton2"}
+                  onClick={() => {
+                    this.handleOpenWishListNav();
+                  }}
                 >
                   <IconButton edge="start" className="NavBtn" color="inherit">
                     <BookmarkIcon style={{ color: "white" }} />
@@ -845,15 +1259,15 @@ export default class UserDashBoard extends Component {
                 </div>
 
                 <div
-                  // className="NavButton2"
-                  // onClick={() => {
-                  //   this.handleOpenMyBooking();
-                  // }}
+                  className={
+                    state.OpenUserDetail || state.OpenUserAddress
+                      ? "NavButton11"
+                      : "NavButton22"
+                  }
                   style={{
                     height: "fit-content",
                     display: "flex",
                     padding: "5px 0 0 15px",
-                    // border: "0.5px solid white",
                   }}
                 >
                   <IconButton
@@ -865,21 +1279,52 @@ export default class UserDashBoard extends Component {
                     <Settings style={{ color: "white" }} />
                   </IconButton>
                   <div
-                    // className="NavButtonText"
                     style={{ height: "fit-content", margin: "10px 0 0 70px" }}
                   >
                     <TreeView style={{ margin: "5px 0 0 0" }}>
                       <TreeItem nodeId="1" label="Customer Setting">
-                        <TreeItem nodeId="2" label="User Details" />
-                        <TreeItem nodeId="3" label="Address" />
+                        <TreeItem
+                          nodeId="2"
+                          label="User Details"
+                          className={
+                            state.OpenUserDetail ? "NavButton11" : "NavButton22"
+                          }
+                          onClick={() => {
+                            this.handleOpenCustomerSettingNav();
+                          }}
+                        />
+                        <TreeItem
+                          nodeId="3"
+                          label="Address"
+                          className={
+                            state.OpenUserAddress
+                              ? "NavButton11"
+                              : "NavButton22"
+                          }
+                          onClick={() => {
+                            this.handleOpenUserAddress();
+                          }}
+                        />
                       </TreeItem>
                     </TreeView>
                   </div>
                 </div>
               </div>
-              <div className={state.MenuOpen ? "SubBody21" : "SubBody22"}>
-                <div style={{ height: "90%", width: "90%" }}>
-                  {state.OpenShow ? <></> : null}
+              <div className="SubBody22">
+                <div style={{ height: "100%", width: "100%" }}>
+                  {state.OpenUserHome
+                    ? this.OpenUserHomeNav()
+                    : state.OpenMyOrder
+                    ? this.OpenMyOrderNav()
+                    : state.OpenCard
+                    ? this.OpenCartNav()
+                    : state.OpenWishList
+                    ? this.OpenWishListNav()
+                    : state.OpenUserDetail
+                    ? this.OpenUserDetailNav()
+                    : state.OpenUserAddress
+                    ? this.OpenUserAddressNav()
+                    : null}
                 </div>
 
                 <Modal

@@ -13,10 +13,10 @@ function App() {
         <Switch>
           <Route exact path="/" component={SignUp} />
           <Route exact path="/SignIn" component={SignIn} />
-          <Route exact path="/AdminDashboard" component={AdminDashboard} />
-          <Route exact path="/UserDashboard" component={UserDashboard} />
-          {/* <Auth Role="Admin" path="/AdminDashboard" component={AdminDashboard}/> */}
-          {/* <Auth Role="Customer" path="/UserDashboard" component={UserDashboard}/> */}
+          {/* <Route exact path="/AdminDashboard" component={AdminDashboard} /> */}
+          {/* <Route exact path="/UserDashboard" component={UserDashboard} /> */}
+          <Auth Role="Admin" path="/AdminDashboard" component={AdminDashboard}/>
+          <Auth Role="Customer" path="/UserDashboard" component={UserDashboard}/>
         </Switch>
       </Router>
     </div>

@@ -25,7 +25,7 @@ export default class ProductServices {
     return axiosServices.post(ProductConfiguration.UpdateProduct, data, false);
   }
   ProductMoveToArchive(data) {
-    return axiosServices.post(
+    return axiosServices.Patch(
       ProductConfiguration.ProductMoveToArchive,
       data,
       false
@@ -39,7 +39,7 @@ export default class ProductServices {
     );
   }
   ProductMoveToTrash(data) {
-    return axiosServices.post(
+    return axiosServices.Patch(
       ProductConfiguration.ProductMoveToTrash,
       data,
       false
@@ -53,13 +53,17 @@ export default class ProductServices {
     );
   }
   ProductDeletePermenently(data) {
-    return axiosServices.post(
+    return axiosServices.Delete(
       ProductConfiguration.ProductDeletePermenently,
       data,
       false
     );
   }
   ProductRestore(data) {
-    return axiosServices.post(ProductConfiguration.ProductRestore, data, false);
+    return axiosServices.Patch(
+      ProductConfiguration.ProductRestore,
+      data,
+      false
+    );
   }
 }

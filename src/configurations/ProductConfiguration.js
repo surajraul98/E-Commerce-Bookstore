@@ -1,15 +1,15 @@
 const ParentConfiguration = require("./ParentConfiguration");
 
 module.exports = {
-  AddProduct: ParentConfiguration.Parent + "",
-  GetAllProduct: ParentConfiguration.Parent + "",
-  GetProductByID: ParentConfiguration.Parent + "",
-  GetProductByName: ParentConfiguration.Parent + "",
-  UpdateProduct: ParentConfiguration.Parent + "",
-  ProductMoveToArchive: ParentConfiguration.Parent + "",
-  GetArchiveProduct: ParentConfiguration.Parent + "",
-  ProductMoveToTrash: ParentConfiguration.Parent + "",
-  GetTrashProduct: ParentConfiguration.Parent + "",
-  ProductDeletePermenently: ParentConfiguration.Parent + "",
-  ProductRestore: ParentConfiguration.Parent + "",
+  AddProduct: ParentConfiguration.Parent + "api/Product/AddProduct",
+  GetAllProduct: ParentConfiguration.Parent + "api/Product/GetAllProduct",
+  GetProductByID: ParentConfiguration.Parent + "api/Product/GetProductByID",
+  GetProductByName: ParentConfiguration.Parent + "api/Product/GetProductByName",
+  UpdateProduct: ParentConfiguration.Parent + "api/Product/UpdateProduct",
+  ProductMoveToArchive: ParentConfiguration.Parent + "api/Product/ProductMoveToArchive",
+  GetArchiveProduct: ParentConfiguration.Parent + "api/Product/GetArchiveProduct",
+  ProductMoveToTrash: ParentConfiguration.Parent + "api/Product/ProductMoveToTrash",
+  GetTrashProduct: ParentConfiguration.Parent + "api/Product/GetTrashProduct",
+  ProductDeletePermenently: ParentConfiguration.Parent + "api/Product/ProductDeletePermenently",
+  ProductRestore: ParentConfiguration.Parent + "api/Product/ProductRestore",
 };

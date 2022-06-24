@@ -69,7 +69,42 @@
                     display: flex;
                     justify-content: center;
                     align-items: center;
-                    background-color: #202020af;
+                    .OpenUserDetailNav-Container {
+                        height: inherit;
+                        width: inherit;
+                        background-color: #202020af;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        .OpenUserDetailNav-SubContainer {
+                            height: 60%;
+                            width: 60%;
+                            border: 0.5px solid white;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            flex-direction: column;
+                            background-color: white;
+                        }
+                    }
+
+                    .OpenUserAddressNav-Container {
+                        height: inherit;
+                        width: inherit;
+                        background-color: #202020af;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        .OpenUserAddressNav-SubContainer {
+                            height: 90%;
+                            width: 80%;
+                            background-color: white;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            flex-direction: column;
+                        }
+                    }
                 }
                 .Sub-OpenCurrentInfo {
                     width: 100%;
@@ -96,11 +131,21 @@
                         display: flex;
                         justify-content: center;
                         align-items: center;
+                        color: yellow;
                     }
                     &:hover {
                         background-color: rgba(112, 111, 110, 0.253);
                     }
                 }
+
+                .NavButton11 {
+                    color: yellow;
+                }
+
+                .NavButton22 {
+                    color: white;
+                }
+
                 .NavButton2 {
                     height: 50px;
                     display: flex;

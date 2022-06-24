@@ -1,14 +1,24 @@
 import React, { useState } from "react";
 import "./AddProduct.scss";
 import ProductServices from "../../services/ProductServices";
-
+import Backdrop from "@material-ui/core/Backdrop";
+import CircularProgress from "@material-ui/core/CircularProgress";
 import DefaultImage from "../Asserts/img.png";
 import TextField from "@material-ui/core/TextField";
 import Button from "@material-ui/core/Button";
+import Snackbar from "@material-ui/core/Snackbar";
+import CloseIcon from "@material-ui/icons/Close";
+import IconButton from "@material-ui/core/IconButton";
 
-export default function AddProduct() {
+const productServices = new ProductServices();
+
+export default function AddProduct(props) {
+  const [Message, setMessage] = useState("");
+  const [OpenLoader, setOpenLoader] = useState(false);
+  const [OpenSnackBar, setOpenSnackBar] = useState(false);
   const [Image, setImage] = useState(DefaultImage);
   const [Data, setData] = useState({
+    Image: new FormData(),
     ProductName: "",
     ProductDescription: "",
     ProductType: "",
@@ -17,20 +27,125 @@ export default function AddProduct() {
     Quantity: "",
   });
 
+  const [ImageFlag, setImageFlag] = useState(false);
+  const [ProductName, setProductName] = useState(false);
+  const [ProductType, setProductType] = useState(false);
+  const [ProductPrice, setProductPrice] = useState(false);
+  const [Quantity, setQuantity] = useState(false);
+
   const handleCapture = (event) => {
-    const { name } = event.target;
-    console.log("Name : ", name);
     const reader = new FileReader();
     reader.onload = () => {
       setImage(reader.result);
     };
     reader.readAsDataURL(event.target.files[0]);
+    setData({ ...Data, Image: event.target.files[0] });
+  };
+
+  const CheckValidity = async () => {
+    console.log("Check Validity Calling....");
+    setImageFlag(false);
+    setProductName(false);
+    setProductType(false);
+    setProductPrice(false);
+    setQuantity(false);
+    if (Data.ProductName === "") {
+      console.log("Product Name Empty");
+      setProductName(true);
+    }
+
+    if (Data.ProductType === "") {
+      console.log("Product Type Empty");
+      setProductType(true);
+    }
+
+    if (Data.ProductPrice === "") {
+      console.log("Product Price Empty");
+      setProductPrice(true);
+    }
+
+    if (Number(Data.Quantity) <= 0) {
+      console.log("Quantity Empty");
+      setQuantity(true);
+    }
+
+    if (Image === DefaultImage) {
+      console.log("Image Empty");
+      setImageFlag(true);
+    }
+  };
+
+  const handleSnackBarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setOpenSnackBar(false);
+  };
+
+  const handleAddProduct = async () => {
+    await CheckValidity();
+    if (Image === DefaultImage) {
+      console.log("Please enter Product Image");
+      return;
+    }
+    if (
+      ProductName === false &&
+      ProductType === false &&
+      ProductPrice === false &&
+      Quantity === false
+    ) {
+      setOpenLoader(true);
+      const data1 = new FormData();
+      data1.append("file", Data.Image);
+      data1.append("productName", Data.ProductName);
+      data1.append("productType", Data.ProductType);
+      data1.append("productPrice", Data.ProductPrice);
+      data1.append("productDetails", Data.ProductDescription);
+      data1.append("productCompany", Data.ProductCompany);
+      data1.append("quantity", Data.Quantity);
+
+      let data = {
+        productName: Data.ProductName,
+        productType: Data.ProductType,
+        productPrice: Data.ProductPrice,
+        productDetails: Data.ProductDescription,
+        productCompany: Data.ProductCompany,
+        quantity: Number(Data.Quantity),
+        file: Data.Image,
+      };
+      productServices
+        .AddProduct(data1)
+        .then((data) => {
+          console.log(" AddProduct Data : ", data);
+          setOpenLoader(false);
+          setOpenSnackBar(true);
+          setMessage(data.data.message);
+          props.handleOpenHomeNav();
+        })
+        .catch((error) => {
+          console.log("AddProduct Error : ", error);
+          setOpenLoader(false);
+          setOpenSnackBar(true);
+          setMessage("Something Went Wrong");
+        });
+      console.log("Acceptable : Data ", data);
+    } else {
+      console.log("Please Fill Required Field. Data : ", Data);
+    }
   };
 
   return (
     <div className="AddProduct-Container">
       <div className="AddProduct-SubContainer">
-        <div className="AddProduct-Box1">
+        <div
+          className="AddProduct-Box1"
+          style={
+            ImageFlag
+              ? { border: "0.5px solid red" }
+              : { border: "0.5px solid lightgray" }
+          }
+        >
           <div className="ImageField">
             <img
               src={Image}
@@ -65,6 +180,7 @@ export default function AddProduct() {
             variant="outlined"
             placeholder="Ex. Mobile, Book"
             style={{ margin: "10px 0 10px 30px", width: "80%" }}
+            error={ProductName}
             value={Data.ProductName}
             onChange={(e) => {
               setData({ ...Data, ProductName: e.target.value });
@@ -88,6 +204,7 @@ export default function AddProduct() {
             variant="outlined"
             placeholder="Ex. Electronic, Book"
             style={{ margin: "10px 0 10px 30px", width: "80%" }}
+            error={ProductType}
             value={Data.ProductType}
             onChange={(e) => {
               setData({ ...Data, ProductType: e.target.value });
@@ -99,6 +216,7 @@ export default function AddProduct() {
             variant="outlined"
             placeholder="Ex. 1000 "
             style={{ margin: "10px 0 10px 30px", width: "80%" }}
+            error={ProductPrice}
             value={Data.ProductPrice}
             onChange={(e) => {
               setData({ ...Data, ProductPrice: e.target.value });
@@ -122,6 +240,7 @@ export default function AddProduct() {
             type="number"
             placeholder="Ex. 12"
             style={{ margin: "10px 0 10px 30px", width: "80%" }}
+            error={Quantity}
             value={Data.Quantity}
             onChange={(e) => {
               setData({ ...Data, Quantity: e.target.value });
@@ -131,11 +250,46 @@ export default function AddProduct() {
             variant="contained"
             color="primary"
             style={{ margin: "10px 0 0px 30px", width: "80%" }}
+            onClick={() => {
+              handleAddProduct();
+            }}
           >
             Add Product
           </Button>
         </div>
       </div>
+      <Backdrop style={{ zIndex: "1", color: "#fff" }} open={OpenLoader}>
+        <CircularProgress color="inherit" />
+      </Backdrop>
+      <Snackbar
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "left",
+        }}
+        open={OpenSnackBar}
+        autoHideDuration={2000}
+        onClose={handleSnackBarClose}
+        message={Message}
+        action={
+          <React.Fragment>
+            <Button
+              color="secondary"
+              size="small"
+              onClick={handleSnackBarClose}
+            >
+              UNDO
+            </Button>
+            <IconButton
+              size="small"
+              aria-label="close"
+              color="inherit"
+              onClick={handleSnackBarClose}
+            >
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </React.Fragment>
+        }
+      />
     </div>
   );
 }

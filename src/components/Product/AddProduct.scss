@@ -4,19 +4,20 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: white;
+    background-color: #202020af;
 
     .AddProduct-SubContainer {
-        height: 80%;
-        width: 80%;
+        height: 90%;
+        width: 90%;
         display: flex;
         justify-content: center;
         align-items: center;
+        background-color: white;
 
         .AddProduct-Box1 {
-            height: 100%;
-            width: 40%;
-            border: 0.5px solid lightgray;
+            height: 90%;
+            width: 35%;
+            // border: 0.5px solid lightgray;
             border-radius: 10px;
             display: flex;
             justify-content: center;
@@ -34,8 +35,8 @@
         }
 
         .AddProduct-Box2 {
-            height: 100%;
-            width: 60%;
+            height: 90%;
+            width: 45%;
             // border: 0.5px solid black;
         }
     }

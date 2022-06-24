@@ -76,14 +76,30 @@ export default class SignIn extends Component {
         .then((data) => {
           console.log("Sign In Data : ", data);
           if (data.data.isSuccess) {
-            {
-              if (this.state.Radiovalue === "Customer") {
-                localStorage.setItem("customer_token", data.data.data.token);
-                this.props.history.push("/UserDashboard");
-              } else {
-                localStorage.setItem("Admin_token", data.data.data.token);
-                this.props.history.push("/AdminDashboard");
-              }
+            //
+            if (this.state.Radiovalue === "Customer") {
+              localStorage.setItem("customer_token", data.data.data.token);
+              localStorage.setItem("Customer_UserID", data.data.data.userId);
+              localStorage.setItem("Customer_UserName", data.data.data.userName);
+              localStorage.setItem("OpenUserHome", true);
+              localStorage.setItem("OpenMyOrder", false);
+              localStorage.setItem("OpenCard", false);
+              localStorage.setItem("OpenWishList", false);
+              localStorage.setItem("OpenCustomerSetting", false);
+              localStorage.setItem("OpenUserDetail", false);
+              localStorage.setItem("OpenUserAddress", false);
+              this.props.history.push("/UserDashboard");
+            } else {
+              localStorage.setItem("Admin_token", data.data.data.token);
+              localStorage.setItem("Admin_UserID", data.data.data.userId);
+              localStorage.setItem("OpenHome", true);
+              localStorage.setItem("OpenAddProduct", false);
+              localStorage.setItem("OpenArchive", false);
+              localStorage.setItem("OpenTrash", false);
+              localStorage.setItem("OpenCustomerList", false);
+              localStorage.setItem("OpenOrderList", false);
+              localStorage.setItem("OpenFeedBack", false);
+              this.props.history.push("/AdminDashboard");
             }
           } else {
             console.log("Something Went Wrong");

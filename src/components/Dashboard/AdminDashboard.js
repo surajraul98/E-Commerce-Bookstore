@@ -1,7 +1,11 @@
 import React, { Component } from "react";
 import "./AdminDashboard.scss";
 import AddProduct from "../Product/AddProduct";
+import GetProduct from "../Product/GetProduct";
 import FeedbackServices from "../../services/FeedbackServices";
+import ProductServices from "../../services/ProductServices";
+import AuthServices from "../../services/AuthServices";
+import CartServices from "../../services/CartServices";
 
 import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
@@ -50,6 +54,9 @@ import CardActions from "@material-ui/core/CardActions";
 import CardContent from "@material-ui/core/CardContent";
 
 const feedbackServices = new FeedbackServices();
+const productServices = new ProductServices();
+const authServices = new AuthServices();
+const cartServices = new CartServices();
 
 const MobileRegex = RegExp(/^[0-9]{11}$/i);
 const PinCodeRegex = RegExp(/^[0-9]{7}$/i);
@@ -62,6 +69,7 @@ export default class AdminDashboard extends Component {
     super(props);
     this.state = {
       Feedback: [],
+      Product: [],
       //
 
       //
@@ -94,33 +102,189 @@ export default class AdminDashboard extends Component {
     };
   }
 
+  //
   componentWillMount() {
-    console.log("Component will mount calling ... ");
+    console.log("Component will mount calling ...  State : ", this.state);
+    this.setState({
+      OpenHome: localStorage.getItem("OpenHome") === "true" ? true : false,
+      OpenAddProduct:
+        localStorage.getItem("OpenAddProduct") === "true" ? true : false,
+      OpenArchive:
+        localStorage.getItem("OpenArchive") === "true" ? true : false,
+      OpenTrash: localStorage.getItem("OpenTrash") === "true" ? true : false,
+      OpenCustomerList:
+        localStorage.getItem("OpenCustomerList") === "true" ? true : false,
+      OpenOrderList:
+        localStorage.getItem("OpenOrderList") === "true" ? true : false,
+      OpenFeedBack:
+        localStorage.getItem("OpenFeedBack") === "true" ? true : false,
+    });
+
+    if (localStorage.getItem("OpenHome") === "true") {
+      this.productServices(this.state.PageNumber);
+    } else if (localStorage.getItem("OpenArchive") === "true") {
+      this.GetArchiveList(this.state.PageNumber);
+    } else if (localStorage.getItem("OpenTrash") === "true") {
+      this.GetTrashList(this.state.PageNumber);
+    } else if (localStorage.getItem("OpenCustomerList") === "true") {
+      this.GetCustomerList(this.state.PageNumber);
+    } else if (localStorage.getItem("OpenOrderList") === "true") {
+      this.GetAllOrderList(this.state.PageNumber);
+    } else if (localStorage.getItem("OpenFeedBack") === "true") {
+      this.GetFeedBack(this.state.PageNumber);
+    }
   }
 
-  GetJobs = async (CurrentPage) => {
+  //
+  productServices = async (CurrentPage) => {
     console.log("Get Jobs List Calling ... ");
     let data = {
       pageNumber: CurrentPage,
-      numberOfRecordPerPage: 8,
+      numberOfRecordPerPage: 4,
     };
+    this.setState({ OpenLoader: true });
+    productServices
+      .GetAllProduct(data)
+      .then((data) => {
+        console.log("GetAllProduct Data : ", data);
+        // debugger
+        if (data.data.data === null && this.state.PageNumber > 1) {
+          this.setState({ PageNumber: this.state.PageNumber - 1 });
+          this.productServices(this.state.PageNumber);
+        } else {
+          this.setState({
+            Product: data.data.data,
+            TotalPages: data.data.totalPage,
+            PageNumber: data.data.currentPage,
+            OpenLoader: false,
+          });
+        }
+      })
+      .catch((error) => {
+        console.log("GetAllProduct Error : ", error);
+        this.setState({ OpenLoader: false });
+      });
   };
 
-  GetBookingList(CurrentPage) {
+  //
+  GetArchiveList = (CurrentPage) => {
+    let data = {
+      pageNumber: CurrentPage,
+      numberOfRecordPerPage: 4,
+    };
+    this.setState({ OpenLoader: true });
+    productServices
+      .GetArchiveProduct(data)
+      .then((data) => {
+        console.log("GetArchiveList Data : ", data);
+        if (data.data.data === null && this.state.PageNumber > 1) {
+          this.setState({ PageNumber: this.state.PageNumber - 1 });
+          this.GetArchiveList(this.state.PageNumber);
+        } else {
+          this.setState({
+            Product: data.data.data,
+            TotalPages: data.data.totalPage,
+            OpenLoader: false,
+          });
+        }
+      })
+      .catch((error) => {
+        console.log("GetArchiveList Error : ", error);
+        this.setState({ OpenLoader: false });
+      });
+  };
+
+  //
+  GetTrashList = (CurrentPage) => {
+    let data = {
+      pageNumber: CurrentPage,
+      numberOfRecordPerPage: 4,
+    };
+    this.setState({ OpenLoader: true });
+    productServices
+      .GetTrashProduct(data)
+      .then((data) => {
+        console.log("GetTrashProduct Data : ", data);
+        if (data.data.data === null && this.state.PageNumber > 1) {
+          this.setState({ PageNumber: this.state.PageNumber - 1 });
+          this.GetTrashList(this.state.PageNumber);
+        } else {
+          this.setState({
+            Product: data.data.data,
+            TotalPages: data.data.totalPage,
+            OpenLoader: false,
+          });
+        }
+      })
+      .catch((error) => {
+        console.log("GetTrashProduct Error : ", error);
+        this.setState({ OpenLoader: false });
+      });
+  };
+
+  //
+  GetCustomerList = (CurrentPage) => {
     let data = {
       pageNumber: CurrentPage,
       numberOfRecordPerPage: 8,
     };
-    // debugger;
     this.setState({ OpenLoader: true });
-    
-  }
+    authServices
+      .CustomerList(data)
+      .then((data) => {
+        console.log("GetCustomerList Data : ", data);
+        if (data.data.data === null && this.state.PageNumber > 1) {
+          this.setState({ PageNumber: this.state.PageNumber - 1 });
+          this.GetCustomerList(this.state.PageNumber);
+        } else {
+          this.setState({
+            Product: data.data.data,
+            TotalPages: data.data.totalPage,
+            OpenLoader: false,
+          });
+        }
+      })
+      .catch((error) => {
+        console.log("GetCustomerList Error : ", error);
+        this.setState({ OpenLoader: false });
+      });
+  };
+
+  //
+  GetAllOrderList = async (CurrentPage) => {
+    console.log("Get My Order List Calling ... ");
+    let data = {
+      pageNumber: CurrentPage,
+      numberOfRecordPerPage: 8,
+      userID: -1,
+    };
+    this.setState({ OpenLoader: true });
+    cartServices
+      .GetOrderProduct(data)
+      .then((data) => {
+        console.log("GetMyOrderList Data : ", data);
+        if (data.data.data === null && this.state.PageNumber > 1) {
+          this.setState({ PageNumber: this.state.PageNumber - 1 });
+          this.GetAllOrderList(this.state.PageNumber);
+        } else {
+          this.setState({
+            Product: data.data.data,
+            TotalPages: data.data.totalPage,
+            OpenLoader: false,
+          });
+        }
+      })
+      .catch((error) => {
+        console.log("GetMyOrderList Error : ", error);
+        this.setState({ OpenLoader: false });
+      });
+  };
 
   GetFeedBack = async (CurrentPage) => {
     // debugger;
     let data = {
       pageNumber: CurrentPage,
-      numberOfRecordPerPage: 5,
+      numberOfRecordPerPage: 8,
     };
 
     await feedbackServices
@@ -131,7 +295,8 @@ export default class AdminDashboard extends Component {
           OpenSnackBar: true,
           Open: false,
           Message: data.data.message,
-          Feedback: data.data.data,
+          Product: data.data.data,
+          TotalPages: data.data.totalPage,
         });
       })
       .catch((error) => {
@@ -165,8 +330,6 @@ export default class AdminDashboard extends Component {
     ) {
       console.log("Acceptable");
       this.setState({ OpenLoader: true });
-
-      
     } else {
       console.log("Please Fill Required Field");
       this.setState({
@@ -227,8 +390,6 @@ export default class AdminDashboard extends Component {
         idNumber: State.IDNumber,
         pinCode: State.Pincode,
       };
-
-      
     } else {
       console.log("Please Fill Required Field");
       this.setState({
@@ -294,7 +455,6 @@ export default class AdminDashboard extends Component {
       let data = {
         customerID: CustomerID,
       };
-     
     } else {
       console.log("Invalid Customer ID");
     }
@@ -318,10 +478,20 @@ export default class AdminDashboard extends Component {
     this.setState({ OpenSnackBar: false });
   };
 
-  handleOpenHomeNav = (e) => {
+  //
+  handleOpenHomeNav = () => {
     console.log("Handle Open List Calling ... ");
-
+    //
+    localStorage.setItem("OpenHome", true);
+    localStorage.setItem("OpenAddProduct", false);
+    localStorage.setItem("OpenArchive", false);
+    localStorage.setItem("OpenTrash", false);
+    localStorage.setItem("OpenCustomerList", false);
+    localStorage.setItem("OpenOrderList", false);
+    localStorage.setItem("OpenFeedBack", false);
+    //
     this.setState({
+      PageNumber: 1,
       OpenHome: true,
       OpenAddProduct: false,
       OpenArchive: false,
@@ -330,12 +500,26 @@ export default class AdminDashboard extends Component {
       OpenOrderList: false,
       OpenFeedBack: false,
     });
+    //
+    this.productServices(
+      this.state.PageNumber == 0 ? 1 : this.state.PageNumber
+    );
   };
 
+  //
   handleOpenAddProductNav = () => {
     console.log("Handle Add Product Nav Calling ... ");
-
+    //
+    localStorage.setItem("OpenHome", false);
+    localStorage.setItem("OpenAddProduct", true);
+    localStorage.setItem("OpenArchive", false);
+    localStorage.setItem("OpenTrash", false);
+    localStorage.setItem("OpenCustomerList", false);
+    localStorage.setItem("OpenOrderList", false);
+    localStorage.setItem("OpenFeedBack", false);
+    //
     this.setState({
+      PageNumber: 1,
       OpenHome: false,
       OpenAddProduct: true,
       OpenArchive: false,
@@ -346,10 +530,20 @@ export default class AdminDashboard extends Component {
     });
   };
 
+  //
   handleOpenArchiveNav = () => {
     console.log("Handle Open Archive Nav Calling ... ");
 
+    localStorage.setItem("OpenHome", false);
+    localStorage.setItem("OpenAddProduct", false);
+    localStorage.setItem("OpenArchive", true);
+    localStorage.setItem("OpenTrash", false);
+    localStorage.setItem("OpenCustomerList", false);
+    localStorage.setItem("OpenOrderList", false);
+    localStorage.setItem("OpenFeedBack", false);
+
     this.setState({
+      PageNumber: 1,
       OpenHome: false,
       OpenAddProduct: false,
       OpenArchive: true,
@@ -358,11 +552,24 @@ export default class AdminDashboard extends Component {
       OpenOrderList: false,
       OpenFeedBack: false,
     });
+
+    this.GetArchiveList(this.state.PageNumber == 0 ? 1 : this.state.PageNumber);
   };
 
+  //
   handleOpenTrashNav = () => {
     console.log("Handle Open Trash Nav Calling...");
+
+    localStorage.setItem("OpenHome", false);
+    localStorage.setItem("OpenAddProduct", false);
+    localStorage.setItem("OpenArchive", false);
+    localStorage.setItem("OpenTrash", true);
+    localStorage.setItem("OpenCustomerList", false);
+    localStorage.setItem("OpenOrderList", false);
+    localStorage.setItem("OpenFeedBack", false);
+
     this.setState({
+      PageNumber: 1,
       OpenHome: false,
       OpenAddProduct: false,
       OpenArchive: false,
@@ -371,11 +578,24 @@ export default class AdminDashboard extends Component {
       OpenOrderList: false,
       OpenFeedBack: false,
     });
+
+    this.GetTrashList(this.state.PageNumber == 0 ? 1 : this.state.PageNumber);
   };
 
+  //
   handleOpenCustomerListNav = () => {
     console.log("Handle Open Customer List Nav Calling...");
+    //
+    localStorage.setItem("OpenHome", false);
+    localStorage.setItem("OpenAddProduct", false);
+    localStorage.setItem("OpenArchive", false);
+    localStorage.setItem("OpenTrash", false);
+    localStorage.setItem("OpenCustomerList", true);
+    localStorage.setItem("OpenOrderList", false);
+    localStorage.setItem("OpenFeedBack", false);
+    //
     this.setState({
+      PageNumber: 1,
       OpenHome: false,
       OpenAddProduct: false,
       OpenArchive: false,
@@ -384,11 +604,24 @@ export default class AdminDashboard extends Component {
       OpenOrderList: false,
       OpenFeedBack: false,
     });
+
+    this.GetCustomerList(this.state.PageNumber);
   };
 
+  //
   handleOpenOrderListNav = () => {
     console.log("Handle Open Customer List Nav Calling...");
+    //
+    localStorage.setItem("OpenHome", false);
+    localStorage.setItem("OpenAddProduct", false);
+    localStorage.setItem("OpenArchive", false);
+    localStorage.setItem("OpenTrash", false);
+    localStorage.setItem("OpenCustomerList", false);
+    localStorage.setItem("OpenOrderList", true);
+    localStorage.setItem("OpenFeedBack", false);
+    //
     this.setState({
+      PageNumber: 1,
       OpenHome: false,
       OpenAddProduct: false,
       OpenArchive: false,
@@ -397,11 +630,24 @@ export default class AdminDashboard extends Component {
       OpenOrderList: true,
       OpenFeedBack: false,
     });
+
+    this.GetAllOrderList(this.state.PageNumber);
   };
 
+  //
   handleOpenFeedBackNav = (e) => {
     console.log("Handle FeedBack Open Calling...");
+    //
+    localStorage.setItem("OpenHome", false);
+    localStorage.setItem("OpenAddProduct", false);
+    localStorage.setItem("OpenArchive", false);
+    localStorage.setItem("OpenTrash", false);
+    localStorage.setItem("OpenCustomerList", false);
+    localStorage.setItem("OpenOrderList", false);
+    localStorage.setItem("OpenFeedBack", true);
+    //
     this.setState({
+      // PageNumber: 1,
       OpenHome: false,
       OpenAddProduct: false,
       OpenArchive: false,
@@ -410,6 +656,8 @@ export default class AdminDashboard extends Component {
       OpenOrderList: false,
       OpenFeedBack: true,
     });
+
+    this.GetFeedBack(this.state.PageNumber);
   };
 
   CheckValidity = () => {
@@ -690,7 +938,6 @@ export default class AdminDashboard extends Component {
 
   handleDeleteBookingApplication = async (ID) => {
     console.log("handleDeleteBookingApplication Calling ..... ID :", ID);
-    
   };
 
   handleApplicationDeletion = async (ID) => {
@@ -755,29 +1002,25 @@ export default class AdminDashboard extends Component {
   };
 
   handlePaging = async (e, value) => {
+    let state = this.state;
     console.log("Current Page : ", value);
 
-    if (this.state.OpenHome) {
-      this.setState({
-        JobPageNumber: value,
-        BookingPageNumber: 1,
-        FeedbackPageNumber: 1,
-      });
-      // await this.GetJobs(value)
-    } else if (this.state.OpenAddProduct) {
-      this.setState({
-        BookingPageNumber: value,
-        JobPageNumber: 1,
-        FeedbackPageNumber: 1,
-      });
-      // await this.GetBookingList(value)
-    } else if (this.state.OpenFeedBack) {
-      this.setState({
-        FeedbackPageNumber: value,
-        JobPageNumber: 1,
-        BookingPageNumber: 1,
-      });
-      // await this.GetFeedBack(value)
+    this.setState({
+      PageNumber: value,
+    });
+
+    if (state.OpenHome) {
+      await this.productServices(value);
+    } else if (state.OpenArchive) {
+      this.GetArchiveList(value);
+    } else if (state.OpenTrash) {
+      this.GetTrashList(value);
+    } else if (state.OpenCustomerList) {
+      this.GetCustomerList(value);
+    } else if (state.OpenOrderList) {
+      this.GetAllOrderList(value);
+    } else if (state.OpenFeedBack) {
+      this.GetFeedBack(value);
     }
   };
 
@@ -839,7 +1082,16 @@ export default class AdminDashboard extends Component {
   };
 
   SignOut = async () => {
-    await localStorage.removeItem("manager_token");
+    await localStorage.removeItem("Admin_token");
+    await localStorage.removeItem("Admin_UserID");
+    await localStorage.removeItem("OpenHome");
+    await localStorage.removeItem("OpenAddProduct");
+    await localStorage.removeItem("OpenArchive");
+    await localStorage.removeItem("OpenTrash");
+    await localStorage.removeItem("OpenCustomerList");
+    await localStorage.removeItem("OpenOrderList");
+    await localStorage.removeItem("OpenFeedBack");
+
     this.props.history.push("/SignIn");
   };
 
@@ -847,44 +1099,331 @@ export default class AdminDashboard extends Component {
     this.setState({ open: true });
   };
 
+  //
   OpenHomeNav = () => {
-    let state = this.state;
-    return <div className="Sub-OpenCurrentInfo"></div>;
+    return (
+      <GetProduct
+        List={this.state.Product}
+        State="Home"
+        TotalPages={this.state.TotalPages}
+        PageNumber={this.state.PageNumber}
+        handlePaging={this.handlePaging}
+        productServices={this.productServices}
+      />
+    );
   };
 
+  //
   OpenAddProductNav = () => {
-    let state = this.state;
-    return <AddProduct />;
+    return (
+      <AddProduct
+        handleOpenHomeNav={() => {
+          this.handleOpenHomeNav();
+        }}
+      />
+    );
   };
 
-  handleBookingList = (e) => {
+  //
+  OpenFeedBackNav = () => {
+    return (
+      <TableContainer
+        component={Paper}
+        style={{
+          display: "flex",
+          justifyContent: "flex-Start",
+          alignItems: "flex-Start",
+          margin: 30,
+          width: "97%",
+          height: "74%",
+        }}
+      >
+        <Table
+          aria-label="customized table"
+          style={{ height: "fit-Content", width: "100%" }}
+        >
+          <TableHead>
+            <TableRow
+              style={{
+                display: "flex",
+                minHeight: "50px",
+                flex: 9,
+              }}
+            >
+              <div className="Header" style={{ flex: 0.7 }}>
+                FeedBack ID
+              </div>
+              <div className="Header" style={{ flex: 2 }}>
+                FeedBack User
+              </div>
+              <div className="Header" style={{ width: 700 }}>
+                FeedBack
+              </div>
+              <div className="Header" style={{ flex: 0.5 }}></div>
+            </TableRow>
+          </TableHead>
+          <TableBody style={{ height: "fit-content" }}>
+            {this.handleFeedbackList()}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    );
+  };
+
+  //
+  handleFeedbackList = (e) => {
     let self = this;
-    return Array.isArray(this.state.BookingList) &&
-      this.state.BookingList.length > 0
-      ? this.state.BookingList.map(function (data, index) {
-          return <div></div>;
+    return Array.isArray(this.state.Product) && this.state.Product.length > 0
+      ? this.state.Product.map(function (data, index) {
+          return (
+            <TableRow
+              key={index}
+              style={{
+                height: "50px",
+                display: "flex",
+                borderBottom: "0.5px solid lightgray",
+                flex: 9,
+              }}
+            >
+              <div className="Row" style={{ flex: 0.7 }}>
+                {data.feedbackID}
+              </div>
+              <div className="Row" style={{ flex: 2 }}>
+                {data.userName}
+              </div>
+              <div
+                className="Row"
+                style={{
+                  width: "700px",
+                  // flex: 3,
+                  textOverflow: "ellipsis",
+                  overflow: "hidden",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {data.feedBack}
+              </div>
+              <div className="Row" style={{ flex: 0.5 }}>
+                <IconButton
+                  variant="outlined"
+                  style={{ color: "black" }}
+                  onClick={() => {
+                    self.handleDeleteFeedback(data.feedbackID);
+                  }}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </div>
+            </TableRow>
+          );
         })
       : null;
   };
 
-  OpenFeedBackNav = () => {
-    return <div></div>;
-  };
-
+  //
   OpenArchiveNav = () => {
-    return <div></div>;
+    console.log("OpenArchiveNav Calling....");
+    return (
+      <GetProduct
+        List={this.state.Product}
+        State="Archive"
+        TotalPages={this.state.TotalPages}
+        PageNumber={this.state.PageNumber}
+        handlePaging={this.handlePaging}
+        GetArchiveList={this.GetArchiveList}
+      />
+    );
   };
 
+  //
   OpenTrashNav = () => {
-    return <div></div>;
+    return (
+      <GetProduct
+        List={this.state.Product}
+        State="Trash"
+        TotalPages={this.state.TotalPages}
+        PageNumber={this.state.PageNumber}
+        handlePaging={this.handlePaging}
+        GetTrashList={this.GetTrashList}
+      />
+    );
   };
 
+  //
   OpenCustomerListNav = () => {
-    return <div></div>;
+    return (
+      <TableContainer
+        component={Paper}
+        style={{
+          display: "flex",
+          justifyContent: "flex-Start",
+          alignItems: "flex-start",
+          margin: 30,
+          width: "97%",
+          height: "74%",
+        }}
+      >
+        <Table
+          aria-label="customized table"
+          style={{ height: "fit-Content", width: "100%" }}
+        >
+          <TableHead>
+            <TableRow
+              style={{
+                display: "flex",
+                minHeight: "50px",
+                flex: 9,
+              }}
+            >
+              <div className="Header" style={{ flex: 1 }}>
+                Customer ID
+              </div>
+              <div className="Header" style={{ flex: 2 }}>
+                UserName
+              </div>
+              <div className="Header" style={{ flex: 2 }}>
+                Full Name
+              </div>
+              <div className="Header" style={{ flex: 2 }}>
+                Email ID
+              </div>
+              <div className="Header" style={{ flex: 2 }}>
+                Mobile Number
+              </div>
+            </TableRow>
+          </TableHead>
+          <TableBody style={{ height: "fit-content" }}>
+            {this.handleCustomerList()}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    );
   };
 
+  //
+  handleCustomerList = (e) => {
+    let self = this;
+    return Array.isArray(this.state.Product) && this.state.Product.length > 0
+      ? this.state.Product.map(function (data, index) {
+          return (
+            <TableRow
+              key={index}
+              style={{
+                height: "50px",
+                display: "flex",
+                borderBottom: "0.5px solid lightgray",
+                flex: 9,
+              }}
+            >
+              <div className="Row" style={{ flex: 1 }}>
+                {data.id == -1 ? <>NA</> : <>{data.id}</>}
+              </div>
+              <div className="Row" style={{ flex: 2 }}>
+                {data.userName}
+              </div>
+              <div className="Row" style={{ flex: 2 }}>
+                {/* {data.fullName} */}
+                {data.fullName == "" ? <>NA</> : <>{data.fullName}</>}
+              </div>
+              <div className="Row" style={{ flex: 2 }}>
+                {/* {data.emailID} */}
+                {data.emailID == "" ? <>NA</> : <>{data.emailID}</>}
+              </div>
+              <div className="Row" style={{ flex: 2 }}>
+                {/* {data.mobileNumber} */}
+                {data.mobileNumber == "" ? <>NA</> : <>{data.mobileNumber}</>}
+              </div>
+            </TableRow>
+          );
+        })
+      : null;
+  };
+
+  //
   OpenOrderListNav = () => {
-    return <div></div>;
+    return (
+      <TableContainer
+        component={Paper}
+        style={{
+          display: "flex",
+          justifyContent: "flex-Start",
+          alignItems: "flex-Start",
+          margin: 30,
+          width: "97%",
+          height: "74%",
+        }}
+      >
+        <Table
+          aria-label="customized table"
+          style={{ height: "fit-Content", width: "100%" }}
+        >
+          <TableHead>
+            <TableRow
+              style={{
+                display: "flex",
+                minHeight: "50px",
+                flex: 9,
+              }}
+            >
+              <div className="Header" style={{ flex: 1 }}>
+                Order ID
+              </div>
+              <div className="Header" style={{ flex: 2 }}>
+                Customer Name
+              </div>
+              <div className="Header" style={{ flex: 2 }}>
+                Product Name
+              </div>
+              <div className="Header" style={{ flex: 2 }}>
+                Product Type
+              </div>
+              <div className="Header" style={{ flex: 2 }}>
+                Product Price
+              </div>
+            </TableRow>
+          </TableHead>
+          <TableBody style={{ height: "fit-content" }}>
+            {this.handleOrderList()}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    );
+  };
+
+  //
+  handleOrderList = (e) => {
+    let self = this;
+    return Array.isArray(this.state.Product) && this.state.Product.length > 0
+      ? this.state.Product.map(function (data, index) {
+          return (
+            <TableRow
+              key={index}
+              style={{
+                height: "50px",
+                display: "flex",
+                borderBottom: "0.5px solid lightgray",
+                flex: 9,
+              }}
+            >
+              <div className="Row" style={{ flex: 1 }}>
+                {data.cartID}
+              </div>
+              <div className="Row" style={{ flex: 2 }}>
+                {data.fullName}
+              </div>
+              <div className="Row" style={{ flex: 2 }}>
+                {data.productName}
+              </div>
+              <div className="Row" style={{ flex: 2 }}>
+                {data.productType}
+              </div>
+              <div className="Row" style={{ flex: 2 }}>
+                {data.productPrice}
+              </div>
+            </TableRow>
+          );
+        })
+      : null;
   };
 
   render() {
@@ -925,9 +1464,9 @@ export default class AdminDashboard extends Component {
                   />
                 </div>
 
-                <IconButton onClick={this.handleSetting}>
+                {/* <IconButton onClick={this.handleSetting}>
                   <SettingsIcon style={{ color: "white" }} />
-                </IconButton>
+                </IconButton> */}
                 <Button
                   color="inherit"
                   onClick={() => {
@@ -1020,13 +1559,35 @@ export default class AdminDashboard extends Component {
                   ) : state.OpenFeedBack ? (
                     this.OpenFeedBackNav()
                   ) : state.OpenArchive ? (
-                    this.OpenArchiveNav
+                    this.OpenArchiveNav()
                   ) : state.OpenTrash ? (
-                    this.OpenTrashNav
+                    this.OpenTrashNav()
                   ) : state.OpenCustomerList ? (
-                    this.OpenCustomerListNav
+                    this.OpenCustomerListNav()
                   ) : state.OpenOrderList ? (
-                    this.OpenOrderListNav
+                    this.OpenOrderListNav()
+                  ) : (
+                    <></>
+                  )}
+                  {state.OpenCustomerList ||
+                  state.OpenOrderList ||
+                  state.OpenFeedBack ? (
+                    <div
+                      style={{
+                        width: "100%",
+                        display: "flex",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Pagination
+                        count={this.state.TotalPages}
+                        Page={this.state.PageNumber}
+                        onChange={this.handlePaging}
+                        variant="outlined"
+                        shape="rounded"
+                        color="secondary"
+                      />
+                    </div>
                   ) : (
                     <></>
                   )}
@@ -1995,22 +2556,11 @@ export default class AdminDashboard extends Component {
                 ) : null}
               </div>
             </div>
-            {/* <Pagination
-              count={this.state.TotalPages}
-              Page={this.state.PageNumber}
-              onChange={this.handlePaging}
-              variant="outlined"
-              shape="rounded"
-              color="secondary"
-            /> */}
           </div>
         </div>
         <Backdrop
           style={{ zIndex: "1", color: "#fff" }}
           open={this.state.OpenLoader}
-          onClick={() => {
-            this.setState({ OpenLoader: false });
-          }}
         >
           <CircularProgress color="inherit" />
         </Backdrop>

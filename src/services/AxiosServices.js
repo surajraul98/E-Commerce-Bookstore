@@ -11,9 +11,43 @@ export default class AxiosServices {
     return axios.get(url, isRequiredHeader && header);
   }
 
-  Delete(url, isRequiredHeader = false, header) {
-    console.log("Axios Delete Request Url : ", url);
-    return axios.delete(url, isRequiredHeader && header);
+  Delete(url, Data, isRequiredHeader = false, header) {
+    console.log("Axios Delete Request Url : ", url, " Data : ", Data);
+    return axios.delete(
+      url,
+      {
+        data: {
+          productID: Data,
+        },
+      },
+      isRequiredHeader && header
+    );
+  }
+
+  DeleteCart(url, Data, isRequiredHeader = false, header) {
+    console.log("Axios Delete Request Url : ", url, " Data : ", Data);
+    return axios.delete(
+      url,
+      {
+        data: {
+          cartID: Data,
+        },
+      },
+      isRequiredHeader && header
+    );
+  }
+
+  DeleteWishList(url, Data, isRequiredHeader = false, header) {
+    console.log("Axios Delete Request Url : ", url, " Data : ", Data);
+    return axios.delete(
+      url,
+      {
+        data: {
+          wishListID: Data,
+        },
+      },
+      isRequiredHeader && header
+    );
   }
 
   Put(url, data, isRequiredHeader = false, header) {

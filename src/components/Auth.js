@@ -2,7 +2,7 @@ import React from "react";
 import { Route, Redirect } from "react-router-dom";
 
 export default function Auth(props) {
-  debugger;
+  // debugger;
   if (props.Role === "Admin") {
     console.log("Admin Token : ", localStorage.getItem("Admin_token"));
     if (localStorage.getItem("Admin_token") !== null) {

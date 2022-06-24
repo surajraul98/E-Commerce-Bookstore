@@ -1,4 +1,4 @@
 module.exports = {
-  Parent: "",
+  Parent: "https://localhost:44327/",
 //   Parent: "",
 };

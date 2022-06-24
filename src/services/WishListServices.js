@@ -16,7 +16,7 @@ export default class WishListServices{
     );
   }
   RemoveWishListProduct(data) {
-    return axiosServices.Delete(
+    return axiosServices.DeleteWishList(
       WishListConfiguration.RemoveWishListProduct,
       data,
       false

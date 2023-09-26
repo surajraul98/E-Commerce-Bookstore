@@ -12,6 +12,10 @@ export default class AuthServices {
     return axiosServices.post(AuthConfigurations.SignIn, data, false);
   }
 
+  EmailService(data) {
+    return axiosServices.post(AuthConfigurations.EmailService, data, false);
+  }
+
   AddCustomerDetail(data) {
     return axiosServices.post(
       AuthConfigurations.AddCustomerDetail,

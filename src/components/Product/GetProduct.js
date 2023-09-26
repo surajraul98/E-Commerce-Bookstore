@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./GetProduct.css";
 import ProductServices from "../../services/ProductServices";
 import CartServices from "../../services/CartServices";
@@ -18,11 +18,16 @@ import Snackbar from "@material-ui/core/Snackbar";
 import CloseIcon from "@material-ui/icons/Close";
 import IconButton from "@material-ui/core/IconButton";
 import RestoreIcon from "@material-ui/icons/Restore";
-import DeleteForeverIcon from "@material-ui/icons/DeleteForever";
 import Backdrop from "@material-ui/core/Backdrop";
 import CircularProgress from "@material-ui/core/CircularProgress";
-import AddShoppingCartIcon from "@material-ui/icons/AddShoppingCart";
-import TurnedInNotIcon from "@material-ui/icons/TurnedInNot";
+import Rating from "@material-ui/lab/Rating";
+import Modal from "@material-ui/core/Modal";
+import Fade from "@material-ui/core/Fade";
+import Radio from "@material-ui/core/Radio";
+import RadioGroup from "@material-ui/core/RadioGroup";
+import FormControlLabel from "@material-ui/core/FormControlLabel";
+import TextField from "@material-ui/core/TextField";
+import EditIcon from "@material-ui/icons/Edit";
 
 const productServices = new ProductServices();
 const cartServices = new CartServices();
@@ -32,6 +37,29 @@ export default function GetProduct(props) {
   const [Message, setMessage] = useState("");
   const [OpenSnackBar, setOpenSnackBar] = useState(false);
   const [OpenLoader, setOpenLoader] = useState(false);
+  const [RatingValue, setRatingValue] = useState(1);
+  const [OpenPaymentGetwayModel, setOpenPaymentGetwayModel] = useState(false);
+  const [datas, setdata] = useState({
+    ProductName: "",
+    ProductType: "",
+    ProductPrice: "",
+    CartID: 0,
+    ProductCompany: "",
+    ProductDetails: "",
+    ProductImageUrl: "",
+    PaymentMode: "card",
+    Card: "",
+    UPI: "",
+  });
+
+  const [Flag, setFlag] = useState({
+    PaymentMode: false,
+  });
+
+  useEffect(() => {
+    console.log("GetProduct Use Effect Calling");
+    console.log("Data : ", props.List);
+  }, []);
 
   const ProductMoveToArchive = async (productID) => {
     setOpenLoader(true);
@@ -74,10 +102,10 @@ export default function GetProduct(props) {
         setMessage("Something Went Wrong");
         setOpenSnackBar(true);
         setOpenLoader(false);
+        props.productServices(props.PageNumber);
       });
   };
 
-  //
   const ProductRestore = async (productID) => {
     setOpenLoader(true);
     let data = {
@@ -104,11 +132,35 @@ export default function GetProduct(props) {
       });
   };
 
+  const TrashProductRestore = async (productID) => {
+    setOpenLoader(true);
+    let data = {
+      productID: productID,
+    };
+    productServices
+      .TrashProductRestore(data)
+      .then((data) => {
+        console.log("ProductRestore Data : ", data);
+        setMessage(data.data.message);
+        setOpenSnackBar(true);
+        setOpenLoader(false);
+        {
+          props.State === "Trash"
+            ? props.GetTrashList(props.PageNumber)
+            : props.GetArchiveList(props.PageNumber);
+        }
+      })
+      .catch((error) => {
+        console.log("ProductRestore Error : ", error);
+        setMessage("Something Went Wrong");
+        setOpenSnackBar(true);
+        setOpenLoader(false);
+      });
+  };
+
   const ProductDeletePermenently = async (productID) => {
     setOpenLoader(true);
-    // let data = {
-    //   productID: productID,
-    // };
+
     productServices
       .ProductDeletePermenently(productID)
       .then((data) => {
@@ -123,6 +175,7 @@ export default function GetProduct(props) {
         setMessage("Something Went Wrong");
         setOpenSnackBar(true);
         setOpenLoader(false);
+        props.productServices(props.PageNumber);
       });
   };
 
@@ -296,288 +349,622 @@ export default function GetProduct(props) {
       });
   };
 
+  const OpenPaymentModel = (data) => {
+    console.log("Data : ", data);
+    setdata({
+      ...datas,
+      ProductName: data.productName,
+      ProductType: data.productType,
+      ProductPrice: data.productPrice,
+      CartID: data.cartID,
+      ProductCompany: data.productCompany,
+      ProductDetails: data.productDetails,
+      ProductImageUrl: data.productImageUrl,
+    });
+    setRatingValue(data.rating);
+    setOpenPaymentGetwayModel(true);
+  };
+
+  const handleClose = () => {
+    setOpenPaymentGetwayModel(false);
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    console.log("Value : ", e.target.value);
+    setdata({ ...datas, [name]: value });
+  };
+
+  const handleConfirmBook = async () => {
+    console.log("handleConfirmBook Calling .... ");
+    //debugger;
+    setFlag({
+      PaymentMode: false,
+    });
+    if (datas.PaymentMode === "upi" && datas.UPI === "") {
+      setFlag({
+        PaymentMode: true,
+      });
+      setOpenSnackBar(true);
+      setMessage("Enter Required Filled");
+
+      return;
+    } else if (datas.PaymentMode === "card" && datas.Card === "") {
+      setFlag({
+        PaymentMode: true,
+      });
+      setOpenSnackBar(true);
+      setMessage("Enter Required Filled");
+      return;
+    }
+    setOpenLoader(true);
+
+    await handleProductRating(RatingValue, datas.CartID);
+
+    let data = {
+      cartNo: datas.CartID,
+      upiid: datas.UPI,
+      paymentType: datas.PaymentMode,
+      cardNo: datas.Card,
+    };
+    cartServices
+      .PaymentGetway(data)
+      .then((data) => {
+        // debugger;
+        console.log("PaymentGetway Data : ", data);
+        setOpenSnackBar(true);
+        setOpenLoader(false);
+        setMessage("Payment Successfully");
+        setOpenPaymentGetwayModel(false);
+        setdata({
+          ProductName: "",
+          ProductType: "",
+          ProductPrice: "",
+          CartID: 0,
+          ProductCompany: "",
+          ProductDetails: "",
+          ProductImageUrl: "",
+          PaymentMode: "card",
+          Card: "",
+          UPI: "",
+        });
+        props.GetMyOrderList(props.PageNumber);
+      })
+      .catch((error) => {
+        // debugger;
+        console.log("PaymentGetway Error : ", error);
+        setOpenSnackBar(true);
+        setOpenLoader(false);
+        setOpenPaymentGetwayModel(false);
+        setMessage("Something Went Wrong");
+        setdata({
+          ProductName: "",
+          ProductType: "",
+          ProductPrice: "",
+          CartID: 0,
+          ProductCompany: "",
+          ProductDetails: "",
+          ProductImageUrl: "",
+          PaymentMode: "card",
+          Card: "",
+          UPI: "",
+        });
+        props.GetMyOrderList(props.PageNumber);
+      });
+  };
+
+  const handleProductRating = async (RatingValue, CartID) => {
+    // debugger;
+    console.log("Rating : ", RatingValue, " Cart ID : ", CartID);
+    let data = {
+      cardID: CartID,
+      rating: RatingValue,
+    };
+
+    await cartServices
+      .Rating(data)
+      .then((data) => {
+        // debugger;
+        console.log("Rating Data : ", data);
+        setOpenSnackBar(true);
+        setOpenLoader(false);
+        setMessage("Rating Apply Successfully");
+        props.GetMyOrderList(props.PageNumber);
+      })
+      .catch((error) => {
+        console.log("Rating Error : ", error);
+        setOpenSnackBar(true);
+        setOpenLoader(false);
+        setMessage("Something Went Wrong");
+        props.GetMyOrderList(props.PageNumber);
+      });
+  };
+
+  // const handleOpenEditProductNav = () => {
+  //   console.log("Handle Edit Product Nav Calling ... ");
+  //   //
+  //   localStorage.setItem("OpenSellerHome", false);
+  //   localStorage.setItem("OpenSellerAddProduct", true);
+  //   //
+  //   this.setState({
+  //     OpenSellerHome: false,
+  //     OpenSellerAddProduct: true,
+  //   });
+  // };
+
+  const   handleEditProduct = (data) => {
+    debugger;
+    console.log("Data : ", data);
+    localStorage.setItem("IsEdit", true);
+    localStorage.setItem("productDataObject", JSON.stringify(data));
+    props.handleOpenEditProductNav();
+  };
+
   return (
     <div className="GetProduct-Container">
       <div className="GetProduct-SubContainer">
-        {Array.isArray(props.List) && props.List.length > 0
-          ? props.List.map(function (data, index) {
-              // console.log("Data : ", data);
-              return (
-                <Card
-                  className=""
-                  style={{ maxWidth: 350, margin: 15 }}
-                  key={index}
-                >
-                  <CardActionArea>
-                    <CardMedia
-                      //   className=""
-                      style={{ height: 180, width: 260 }}
-                      image={data.productImageUrl}
-                      title="Contemplative Reptile"
-                    />
-
-                    <CardContent
-                      style={{
-                        width: 228,
-                        height: 130,
-                      }}
+        <div className="HomePage-SubContainer-Body-SubBody1">
+          {Array.isArray(props.List) && props.List.length > 0
+            ? props.List.map(function (data, index) {
+                console.log("Get Product Data : ", data);
+                return (
+                  <>
+                    <Card
+                      className=""
+                      style={{ maxWidth: 350, margin: 15 }}
+                      key={index}
                     >
-                      <Typography
-                        gutterBottom
-                        variant="h5"
-                        component="h2"
-                        // style={{ margin: 0 }}
-                      >
-                        {data.productName}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="textSecondary"
-                        component="p"
+                      <CardActionArea>
+                        <CardMedia
+                          style={{ height: 180, width: 260, margin: "0 auto" }}
+                          image={data.productImageUrl}
+                          title="Contemplative Reptile"
+                        />
+
+                        <CardContent
+                          style={{
+                            width: 228,
+                            height: 130,
+                            margin: "0 auto",
+                          }}
+                        >
+                          <Typography gutterBottom variant="h5" component="h2">
+                            {data.productName}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            color="textSecondary"
+                            component="p"
+                            style={{
+                              height: 80,
+                              textOverflow: "ellipsis",
+                              overflow: "hidden",
+                            }}
+                          >
+                            {data.productDetails}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            color="textSecondary"
+                            component="p"
+                            style={{
+                              height: 40,
+                              display: "flex",
+                              justifyContent: "center",
+                              alignItems: "center",
+                              fontWeight: 600,
+                              color: "blue",
+                            }}
+                          >
+                            {props.State === "Home" ||
+                            props.State === "Archive" ||
+                            props.State === "UserHome" ||
+                            props.State === "Trash" ||
+                            props.State === "WishList" ? (
+                              <>
+                                {data.quantity !== 0 ? (
+                                  <>Available : {data.quantity}</>
+                                ) : (
+                                  <>Not Available</>
+                                )}
+                              </>
+                            ) : null}{" "}
+                            &nbsp; &nbsp;{" "}
+                            {props.State !== "MyOrder" ? (
+                              <>Price : {data.productPrice} &#8377;</>
+                            ) : null}
+                          </Typography>
+                        </CardContent>
+                      </CardActionArea>
+                      <CardActions
                         style={{
-                          height: 80,
-                          textOverflow: "ellipsis",
-                          overflow: "hidden",
-                          // display: "flex",
-                          // justifyContent: "center",
-                          // alignItems: "center",
-                        }}
-                      >
-                        {data.productDetails}
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        color="textSecondary"
-                        component="p"
-                        style={{
-                          height: 40,
                           display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          fontWeight: 600,
-                          color: "blue",
+                          justifyContent: "space-around",
                         }}
                       >
-                        {props.State === "Home" ||
-                        props.State === "Archive" ||
-                        props.State === "UserHome" ||
-                        props.State === "Trash" ||
-                        props.State === "WishList" ? (
+                        {props.State === "Home" ? (
+                          <>
+                            <Button
+                              size="small"
+                              color="primary"
+                              // style={{ width: "100%" }}
+                              onClick={() => {
+                                handleEditProduct(data);
+                              }}
+                            >
+                              <EditIcon style={{ color: "black" }} />
+                            </Button>
+                            <Button
+                              size="small"
+                              color="primary"
+                              onClick={() => {
+                                ProductMoveToArchive(data.productID);
+                              }}
+                            >
+                              <ArchiveIcon style={{ color: "black" }} />
+                            </Button>
+                            <Button
+                              size="small"
+                              color="primary"
+                              onClick={() => {
+                                ProductMoveToTrash(data.productID);
+                              }}
+                            >
+                              <DeleteIcon style={{ color: "black" }} />
+                            </Button>
+                          </>
+                        ) : props.State === "Archive" ? (
+                          <Button
+                            size="small"
+                            color="primary"
+                            onClick={() => {
+                              ProductRestore(data.productID);
+                            }}
+                          >
+                            <RestoreIcon style={{ color: "black" }} />
+                          </Button>
+                        ) : props.State === "UserHome" ? (
                           <>
                             {data.quantity !== 0 ? (
-                              <>Available : {data.quantity}</>
+                              <Button
+                                size="small"
+                                color="primary"
+                                style={{
+                                  fontSize: 12,
+                                  fontWeight: 700,
+                                  color: "black",
+                                }}
+                                onClick={() => {
+                                  AddToCart(data.productID);
+                                }}
+                              >
+                                &nbsp;Add To Cart
+                              </Button>
                             ) : (
-                              <>Not Available</>
+                              <></>
                             )}
+                            <Button
+                              size="small"
+                              color="primary"
+                              style={{
+                                fontSize: 12,
+                                fontWeight: 700,
+                                color: "red",
+                              }}
+                              onClick={() => {
+                                AddToWishList(data.productID);
+                              }}
+                            >
+                              &nbsp;Add To WishList
+                            </Button>
                           </>
-                        ) : null}{" "}
-                        &nbsp; &nbsp;{" "}
-                        {props.State !== "MyOrder" ? (
-                          <>Price : {data.productPrice} &#8377;</>
+                        ) : props.State === "Trash" ? (
+                          <>
+                            <Button
+                              size="small"
+                              color="primary"
+                              onClick={() => {
+                                TrashProductRestore(data.productID);
+                              }}
+                            >
+                              <RestoreIcon style={{ color: "black" }} />
+                            </Button>
+                            {/* <Button
+                              size="small"
+                              color="primary"
+                              onClick={() => {
+                                ProductDeletePermenently(data.productID);
+                              }}
+                            >
+                              <DeleteForeverIcon style={{ color: "black" }} />
+                            </Button> */}
+                          </>
+                        ) : props.State === "Cart" ? (
+                          <>
+                            {data.quantity !== 0 ? (
+                              <Button
+                                size="small"
+                                color="primary"
+                                style={{
+                                  fontSize: 12,
+                                  fontWeight: 700,
+                                  color: "black",
+                                }}
+                                onClick={() => {
+                                  OrderProduct(data.cartID, data.productID);
+                                }}
+                              >
+                                &nbsp;Order Product
+                              </Button>
+                            ) : (
+                              <></>
+                            )}
+                            <Button
+                              size="small"
+                              color="primary"
+                              style={{
+                                fontSize: 12,
+                                fontWeight: 700,
+                                color: "red",
+                              }}
+                              onClick={() => {
+                                RemoveCart(data.cartID);
+                              }}
+                            >
+                              &nbsp;Remove Cart
+                            </Button>
+                          </>
+                        ) : props.State === "WishList" ? (
+                          <>
+                            {data.quantity !== 0 ? (
+                              <Button
+                                size="small"
+                                color="primary"
+                                onClick={() => {
+                                  MoveToCart(data.productID, data.wishListID);
+                                }}
+                                style={{
+                                  fontSize: 12,
+                                  fontWeight: 700,
+                                  color: "black",
+                                }}
+                              >
+                                Move To Cart
+                              </Button>
+                            ) : (
+                              <></>
+                            )}
+                            <Button
+                              size="small"
+                              color="primary"
+                              onClick={() => {
+                                RemoveWishList(data.wishListID);
+                              }}
+                              style={{
+                                fontSize: 12,
+                                fontWeight: 700,
+                                color: "red",
+                              }}
+                            >
+                              Remove WishList
+                            </Button>
+                          </>
+                        ) : props.State === "MyOrder" ? (
+                          <>
+                            <Rating
+                              name="simple-controlled"
+                              value={data.rating}
+                            />
+                            {!data.isPayment ? (
+                              <Button
+                                size="small"
+                                color="primary"
+                                onClick={() => {
+                                  OpenPaymentModel(data);
+                                }}
+                                style={{
+                                  fontSize: 12,
+                                  fontWeight: 700,
+                                  color: "red",
+                                }}
+                              >
+                                Payment
+                              </Button>
+                            ) : (
+                              <></>
+                            )}
+                            <Button
+                              size="small"
+                              color="primary"
+                              onClick={() => {
+                                CancleOrder(data.cartID, data.productID);
+                              }}
+                              style={{
+                                fontSize: 12,
+                                fontWeight: 700,
+                                color: "black",
+                              }}
+                            >
+                              Cancle Order
+                            </Button>
+                          </>
                         ) : null}
-                      </Typography>
-                    </CardContent>
-                  </CardActionArea>
-                  <CardActions
-                    style={{ display: "flex", justifyContent: "space-around" }}
-                  >
-                    {props.State === "Home" ? (
-                      <>
-                        <Button
-                          size="small"
-                          color="primary"
-                          onClick={() => {
-                            ProductMoveToArchive(data.productID);
-                          }}
-                        >
-                          <ArchiveIcon style={{ color: "black" }} />
-                        </Button>
-                        <Button
-                          size="small"
-                          color="primary"
-                          onClick={() => {
-                            ProductMoveToTrash(data.productID);
-                          }}
-                        >
-                          <DeleteIcon style={{ color: "black" }} />
-                        </Button>
-                      </>
-                    ) : props.State === "Archive" ? (
-                      <Button
-                        size="small"
-                        color="primary"
-                        onClick={() => {
-                          ProductRestore(data.productID);
-                        }}
-                      >
-                        <RestoreIcon style={{ color: "black" }} />
-                      </Button>
-                    ) : props.State === "UserHome" ? (
-                      <>
-                        {data.quantity !== 0 ? (
-                          <Button
-                            size="small"
-                            color="primary"
-                            // variant="outlined"
-                            style={{
-                              fontSize: 12,
-                              fontWeight: 700,
-                              color: "black",
-                            }}
-                            onClick={() => {
-                              AddToCart(data.productID);
-                            }}
-                          >
-                            {/* <AddShoppingCartIcon /> */}
-                            &nbsp;Add To Cart
-                          </Button>
-                        ) : (
-                          <></>
-                        )}
-                        <Button
-                          size="small"
-                          color="primary"
-                          // variant="outlined"
-                          style={{
-                            fontSize: 12,
-                            fontWeight: 700,
-                            color: "red",
-                          }}
-                          onClick={() => {
-                            AddToWishList(data.productID);
-                          }}
-                        >
-                          {/* <TurnedInNotIcon /> */}
-                          &nbsp;Add To WishList
-                        </Button>
-                      </>
-                    ) : props.State === "Trash" ? (
-                      <>
-                        <Button
-                          size="small"
-                          color="primary"
-                          onClick={() => {
-                            ProductRestore(data.productID);
-                          }}
-                        >
-                          <RestoreIcon style={{ color: "black" }} />
-                        </Button>
-                        <Button
-                          size="small"
-                          color="primary"
-                          onClick={() => {
-                            ProductDeletePermenently(data.productID);
-                          }}
-                        >
-                          <DeleteForeverIcon style={{ color: "black" }} />
-                        </Button>
-                      </>
-                    ) : props.State === "Cart" ? (
-                      <>
-                        {data.quantity !== 0 ? (
-                          <Button
-                            size="small"
-                            color="primary"
-                            // variant="outlined"
-                            style={{
-                              fontSize: 12,
-                              fontWeight: 700,
-                              color: "black",
-                            }}
-                            onClick={() => {
-                              OrderProduct(data.cartID, data.productID);
-                            }}
-                          >
-                            {/* <AddShoppingCartIcon /> */}
-                            &nbsp;Order Product
-                          </Button>
-                        ) : (
-                          <></>
-                        )}
-                        <Button
-                          size="small"
-                          color="primary"
-                          // variant="outlined"
-                          style={{
-                            fontSize: 12,
-                            fontWeight: 700,
-                            color: "red",
-                          }}
-                          onClick={() => {
-                            RemoveCart(data.cartID);
-                          }}
-                        >
-                          {/* <TurnedInNotIcon /> */}
-                          &nbsp;Remove Cart
-                        </Button>
-                      </>
-                    ) : props.State === "WishList" ? (
-                      <>
-                        {data.quantity !== 0 ? (
-                          <Button
-                            size="small"
-                            color="primary"
-                            onClick={() => {
-                              MoveToCart(data.productID, data.wishListID);
-                            }}
-                            style={{
-                              fontSize: 12,
-                              fontWeight: 700,
-                              color: "black",
-                            }}
-                          >
-                            Move To Cart
-                          </Button>
-                        ) : (
-                          <></>
-                        )}
-                        <Button
-                          size="small"
-                          color="primary"
-                          onClick={() => {
-                            RemoveWishList(data.wishListID);
-                          }}
-                          style={{
-                            fontSize: 12,
-                            fontWeight: 700,
-                            color: "red",
-                          }}
-                        >
-                          Remove WishList
-                        </Button>
-                      </>
-                    ) : props.State === "MyOrder" ? (
-                      <>
-                        <Button
-                          size="small"
-                          color="primary"
-                          onClick={() => {
-                            CancleOrder(data.cartID, data.productID);
-                          }}
-                          style={{
-                            fontSize: 12,
-                            fontWeight: 700,
-                            color: "red",
-                          }}
-                        >
-                          Cancle Order
-                        </Button>
-                      </>
-                    ) : null}
-                  </CardActions>
-                </Card>
-              );
-            })
-          : null}
+                      </CardActions>
+                    </Card>
+                    {/* ) : (
+                      <></>
+                    )} */}
+                  </>
+                );
+              })
+            : null}
+        </div>
+        <div className="HomePage-SubContainer-Body-SubBody2">
+          <Pagination
+            count={props.TotalPages}
+            Page={props.PageNumber}
+            onChange={props.handlePaging}
+            variant="outlined"
+            shape="rounded"
+            color="secondary"
+          />
+        </div>
       </div>
-      <Pagination
-        count={props.TotalPages}
-        Page={props.PageNumber}
-        onChange={props.handlePaging}
-        variant="outlined"
-        shape="rounded"
-        color="secondary"
-      />
+
+      <Modal
+        open={OpenPaymentGetwayModel}
+        onClose={() => {
+          handleClose();
+        }}
+        closeAfterTransition
+        BackdropComponent={Backdrop}
+        BackdropProps={{
+          timeout: 500,
+        }}
+        className="Model-Create-Ticket"
+      >
+        <Fade in={OpenPaymentGetwayModel}>
+          <div className="Model-Open-Getway-Main">
+            <div className="Model-Create-Ticket-Header">Product Detail</div>
+            <div className="Model-Open-Getway-Body">
+              <img
+                src={datas.ProductImageUrl}
+                alt="Product Image"
+                style={{ height: 200, width: 200 }}
+              />
+              <div style={{ display: "flex" }}>
+                <div className="Model-Create-Ticket-Body-Row">
+                  Order ID :
+                  <div style={{ color: "red" }}>&nbsp;{datas.CartID}</div>
+                </div>
+                <div className="Model-Create-Ticket-Body-Row">
+                  Product Name :{" "}
+                  <div style={{ color: "red" }}>&nbsp;{datas.ProductName}</div>
+                </div>
+              </div>
+              <div style={{ display: "flex" }}>
+                <div className="Model-Create-Ticket-Body-Row">
+                  Product Price :{" "}
+                  <div style={{ color: "red" }}>
+                    &nbsp;
+                    {datas.ProductPrice} &#8377;
+                  </div>
+                </div>
+                <div className="Model-Create-Ticket-Body-Row">
+                  Product Type :&nbsp;{" "}
+                  <div style={{ color: "red" }}>{datas.ProductType}</div>
+                </div>
+              </div>
+              <div style={{ display: "flex" }}>
+                <div className="Model-Create-Ticket-Body-Row">
+                  Product Comapny :{" "}
+                  <div style={{ color: "red" }}>
+                    &nbsp;{datas.ProductCompany}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: "flex" }}>
+                <div className="Model-Create-Ticket-Body-Row">
+                  Rating : &nbsp;
+                  <Rating
+                    name="RatingValue"
+                    value={RatingValue}
+                    onChange={(event, newValue) => {
+                      // debugger;
+                      console.log(
+                        "New Value : ",
+                        newValue,
+                        " Cart ID : ",
+                        datas.CartID
+                      );
+                      setRatingValue(newValue);
+                    }}
+                  />
+                </div>
+              </div>
+              <div
+                style={{ display: "flex" }}
+                className="Model-Create-Ticket-Body-Row"
+              >
+                Payment Mode :
+                <RadioGroup
+                  name="PaymentMode"
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    margin: "0 0 0 20px",
+                  }}
+                  value={datas.PaymentMode}
+                  onChange={handleChange}
+                >
+                  <FormControlLabel
+                    value="card"
+                    control={<Radio />}
+                    label="Card"
+                  />
+                  <FormControlLabel
+                    value="cash"
+                    control={<Radio />}
+                    label="Cash"
+                  />
+                  <FormControlLabel
+                    value="upi"
+                    control={<Radio />}
+                    label="UPI"
+                  />
+                </RadioGroup>
+              </div>
+              <div className="CartDetail">
+                {datas.PaymentMode !== "cash" ? (
+                  <TextField
+                    variant="outlined"
+                    size="small"
+                    label={
+                      datas.PaymentMode === "card"
+                        ? "Card Number"
+                        : "UPI Number"
+                    }
+                    name={datas.PaymentMode === "card" ? "Card" : "UPI"}
+                    style={{ margin: "5px 0 20px 0" }}
+                    error={Flag.PaymentMode}
+                    value={
+                      datas.PaymentMode === "card" ? datas.Card : datas.UPI
+                    }
+                    onChange={handleChange}
+                  />
+                ) : null}
+              </div>
+            </div>
+            <div className="Model-Open-Getway-Footer">
+              <Button
+                // variant="contained"
+                style={{ margin: "10px" }}
+                onClick={() => {
+                  handleClose();
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                style={{
+                  backgroundColor: "#ff0000",
+                  width: 100,
+                  margin: "0px 0 0 10px",
+                  color: "white",
+                }}
+                onClick={() => {
+                  handleConfirmBook();
+                }}
+              >
+                Book
+              </Button>
+            </div>
+          </div>
+        </Fade>
+      </Modal>
+
       <Backdrop style={{ zIndex: "1", color: "#fff" }} open={OpenLoader}>
         <CircularProgress color="inherit" />
       </Backdrop>

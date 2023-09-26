@@ -1,6 +1,7 @@
 const axios = require("axios").default;
 
 export default class AxiosServices {
+  
   post(url, data, isRequiredHeader = false, header) {
     console.log("Axios Post Request Url : ", url, " Data : ", data);
     return axios.post(url, data, isRequiredHeader && header);
@@ -59,4 +60,5 @@ export default class AxiosServices {
     console.log("Axios Patch Request Url : ", url, " Data : ", data);
     return axios.patch(url, data, isRequiredHeader && header);
   }
+  
 }

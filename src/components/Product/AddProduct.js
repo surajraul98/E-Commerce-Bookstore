@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./AddProduct.css";
 import ProductServices from "../../services/ProductServices";
 import Backdrop from "@material-ui/core/Backdrop";
@@ -19,6 +19,8 @@ export default function AddProduct(props) {
   const [Image, setImage] = useState(DefaultImage);
   const [Data, setData] = useState({
     Image: new FormData(),
+    IsImageEdited: false,
+    ProductID: 0,
     ProductName: "",
     ProductDescription: "",
     ProductType: "",
@@ -32,6 +34,46 @@ export default function AddProduct(props) {
   const [ProductType, setProductType] = useState(false);
   const [ProductPrice, setProductPrice] = useState(false);
   const [Quantity, setQuantity] = useState(false);
+  const [IsEdit, setIsEdit] = useState(false);
+
+  useEffect(() => {
+    debugger;
+    if (localStorage.getItem("IsEdit") === "true") {
+      setIsEdit(true);
+      /*
+      insertionDate: null
+      isActive: true
+      isArchive: false
+      productCompany: "Test1"
+      productDetails: "Test1"
+      productID: 4
+      productImageUrl: "http://res.cloudinary.com/dzavgoc9w/image/upload/v1693126419/dcdxpuuvpr8mpseirurw.jpg"
+      productName: "Test1"
+      productPrice: "100"
+      productType: "Test1"
+      publicId: "fb8cd7dd-2006-45e1-b413-71f4e44b8e52"
+      quantity: 5
+      updateDate: null
+      */
+      var _data = JSON.parse(localStorage.getItem("productDataObject"));
+      setImage(_data.productImageUrl);
+      setData({
+        ...Data,
+        ProductID: _data.productID,
+        ProductName: _data.productName,
+        ProductDescription: _data.productDetails,
+        ProductType: _data.productType,
+        ProductCompany: _data.productCompany,
+        ProductPrice: _data.productPrice,
+        Quantity: _data.quantity,
+      });
+    } else {
+      localStorage.setItem("IsEdit", false);
+      localStorage.setItem("productDataObject", null);
+      setIsEdit(false);
+      
+    }
+  }, []);
 
   const handleCapture = (event) => {
     const reader = new FileReader();
@@ -39,7 +81,7 @@ export default function AddProduct(props) {
       setImage(reader.result);
     };
     reader.readAsDataURL(event.target.files[0]);
-    setData({ ...Data, Image: event.target.files[0] });
+    setData({ ...Data, Image: event.target.files[0], IsImageEdited: true });
   };
 
   const CheckValidity = async () => {
@@ -120,7 +162,7 @@ export default function AddProduct(props) {
           console.log(" AddProduct Data : ", data);
           setOpenLoader(false);
           setOpenSnackBar(true);
-          setMessage(data.data.message);
+          setMessage(data.message);
           props.handleOpenHomeNav();
         })
         .catch((error) => {
@@ -133,6 +175,74 @@ export default function AddProduct(props) {
     } else {
       console.log("Please Fill Required Field. Data : ", Data);
     }
+  };
+
+  const handleEditProduct = async () => {
+    await CheckValidity();
+    if (Image === DefaultImage) {
+      console.log("Please enter Product Image");
+      return;
+    }
+    if (
+      ProductName === false &&
+      ProductType === false &&
+      ProductPrice === false &&
+      Quantity === false
+    ) {
+      debugger;
+      setOpenLoader(true);
+      const data1 = new FormData();
+      if (Data.IsImageEdited) {
+        data1.append("file", Data.Image);
+      }
+      data1.append("isImageEdit", Data.IsImageEdited ? "TRUE" : "FALSE");
+      data1.append("productID", Data.ProductID);
+      data1.append("productName", Data.ProductName);
+      data1.append("productType", Data.ProductType);
+      data1.append("productPrice", Data.ProductPrice);
+      data1.append("productDetails", Data.ProductDescription);
+      data1.append("productCompany", Data.ProductCompany);
+      data1.append("quantity", Data.Quantity);
+
+      productServices
+        .UpdateProduct(data1)
+        .then((data) => {
+          console.log(" AddProduct Data : ", data);
+          setOpenLoader(false);
+          setOpenSnackBar(true);
+          setMessage(data.message);
+          localStorage.setItem("IsEdit", false);
+          localStorage.setItem("productDataObject", null);
+          props.handleOpenHomeNav();
+        })
+        .catch((error) => {
+          console.log("AddProduct Error : ", error);
+          setOpenLoader(false);
+          setOpenSnackBar(true);
+          setMessage("Something Went Wrong");
+        });
+    } else {
+      console.log("Please Fill Required Field. Data : ", Data);
+    }
+  };
+
+  const handleCancelProduct = async () => {
+    localStorage.setItem("IsEdit", false);
+    localStorage.setItem("productDataObject", null);
+    setData({
+      ...Data,
+      Image: new FormData(),
+      IsImageEdited: false,
+      ProductID: 0,
+      ProductName: "",
+      ProductDescription: "",
+      ProductType: "",
+      ProductCompany: "",
+      ProductPrice: "",
+      Quantity: "",
+    });
+    setIsEdit(false);
+    setImage(DefaultImage);
   };
 
   return (
@@ -178,7 +288,7 @@ export default function AddProduct(props) {
             size="small"
             label="Product Name"
             variant="outlined"
-            placeholder="Ex. Mobile, Book"
+            placeholder="Ex.Book"
             style={{ margin: "10px 0 10px 30px", width: "80%" }}
             error={ProductName}
             value={Data.ProductName}
@@ -202,7 +312,7 @@ export default function AddProduct(props) {
             size="small"
             label="Product Type"
             variant="outlined"
-            placeholder="Ex. Electronic, Book"
+            placeholder="Ex. Health, Biography"
             style={{ margin: "10px 0 10px 30px", width: "80%" }}
             error={ProductType}
             value={Data.ProductType}
@@ -211,6 +321,7 @@ export default function AddProduct(props) {
             }}
           />
           <TextField
+            type="number"
             size="small"
             label="Product Price"
             variant="outlined"
@@ -251,10 +362,20 @@ export default function AddProduct(props) {
             color="primary"
             style={{ margin: "10px 0 0px 30px", width: "80%" }}
             onClick={() => {
-              handleAddProduct();
+              IsEdit ? handleEditProduct() : handleAddProduct();
             }}
           >
-            Add Product
+            {IsEdit ? <>Edit Product</> : <>Add Product</>}
+          </Button>
+          <Button
+            variant="contained"
+            // color="primary"
+            style={{ margin: "10px 0 0px 30px", width: "80%" }}
+            onClick={() => {
+              handleCancelProduct();
+            }}
+          >
+            <>Cancel</>
           </Button>
         </div>
       </div>

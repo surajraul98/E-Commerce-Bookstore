@@ -28,7 +28,19 @@ export default class CartServices {
     return axiosServices.post(CartConfiguration.GetOrderProduct, data, false);
   }
 
+  GetAllOrderProduct(data) {
+    return axiosServices.post(CartConfiguration.GetAllOrderProduct, data, false);
+  }
+
   CancleOrder(data) {
     return axiosServices.Patch(CartConfiguration.CancleOrder, data, false);
+  }
+
+  PaymentGetway(data) {
+    return axiosServices.Patch(CartConfiguration.PaymentGetway, data, false);
+  }
+
+  Rating(data) {
+    return axiosServices.Patch(CartConfiguration.Rating, data, false);
   }
 }

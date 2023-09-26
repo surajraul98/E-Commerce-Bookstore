@@ -16,9 +16,22 @@ export default function Auth(props) {
       return <Redirect exact path="/" />;
       //
     }
-  } else {
+  } else if (props.Role === "Customer"){
     console.log("Customer Token : ", localStorage.getItem("customer_token"));
     if (localStorage.getItem("customer_token") !== null) {
+      //Token Found In Local Storage
+      console.log("Routing On : ", props.path);
+      return <Route exact path={props.path} component={props.component} />;
+      //
+    } else {
+      // Token Not Found In Local Storage
+      console.log("Redirect To Sign Up Page");
+      return <Redirect exact path="/" />;
+      //
+    }
+  } else if (props.Role === "Seller"){
+    console.log("Customer Token : ", localStorage.getItem("Seller_token"));
+    if (localStorage.getItem("Seller_token") !== null) {
       //Token Found In Local Storage
       console.log("Routing On : ", props.path);
       return <Route exact path={props.path} component={props.component} />;

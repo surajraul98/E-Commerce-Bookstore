@@ -24,13 +24,10 @@ import Snackbar from "@material-ui/core/Snackbar";
 import CloseIcon from "@material-ui/icons/Close";
 import TextField from "@material-ui/core/TextField";
 import PaymentIcon from "@material-ui/icons/Payment";
-import EditIcon from "@material-ui/icons/Edit";
-import DeleteIcon from "@material-ui/icons/Delete";
 import SearchIcon from "@material-ui/icons/Search";
 import InputBase from "@material-ui/core/InputBase";
 import ShoppingCartIcon from "@material-ui/icons/ShoppingCart";
 import BookmarkIcon from "@material-ui/icons/Bookmark";
-import SettingsIcon from "@material-ui/icons/Settings";
 import ShopIcon from "@material-ui/icons/Shop";
 
 import InputLabel from "@material-ui/core/InputLabel";
@@ -86,6 +83,8 @@ export default class UserDashBoard extends Component {
       Country: "",
       Pincode: "",
       //
+      Search: "",
+      //
       Address1Flag: false,
       CityFlag: false,
       DistictFlag: false,
@@ -125,7 +124,7 @@ export default class UserDashBoard extends Component {
     };
   }
 
-  componentWillMount() {
+  async componentWillMount() {
     console.log("Component will mount calling ... ");
 
     this.setState({
@@ -145,16 +144,21 @@ export default class UserDashBoard extends Component {
     });
 
     if (localStorage.getItem("OpenUserHome") === "true") {
-      this.productServices(this.state.PageNumber);
+      await this.productServices(this.state.PageNumber);
     } else if (localStorage.getItem("OpenMyOrder") === "true") {
+      await this.GetMyOrderList(this.state.PageNumber);
     } else if (localStorage.getItem("OpenCard") === "true") {
-      this.GetAllCardDetails(this.state.PageNumber);
+      await this.GetAllCardDetails(this.state.PageNumber);
     } else if (localStorage.getItem("OpenWishList") === "true") {
-      this.GetAllWishListDetails(this.state.PageNumber);
+      await this.GetAllWishListDetails(this.state.PageNumber);
     }
 
-    this.GetCustomerDetail(Number(localStorage.getItem("Customer_UserID")));
-    this.GetCustomerAdderess(Number(localStorage.getItem("Customer_UserID")));
+    await this.GetCustomerDetail(
+      Number(localStorage.getItem("Customer_UserID"))
+    );
+    await this.GetCustomerAdderess(
+      Number(localStorage.getItem("Customer_UserID"))
+    );
   }
 
   //
@@ -162,23 +166,46 @@ export default class UserDashBoard extends Component {
     console.log("Get Jobs List Calling ... ");
     let data = {
       pageNumber: CurrentPage,
-      numberOfRecordPerPage: 4,
+      numberOfRecordPerPage: 10,
     };
-    this.setState({ OpenLoader: true });
-    productServices
+    this.setState({ OpenLoader: true, Product: [] });
+    await productServices
       .GetAllProduct(data)
       .then((data) => {
-        console.log("GetAllProduct Data : ", data);
-        if (data.data.data === null && this.state.PageNumber > 1) {
-          this.setState({ PageNumber: this.state.PageNumber - 1 });
-          this.productServices(this.state.PageNumber);
-        } else {
-          this.setState({
-            Product: data.data.data,
-            TotalPages: data.data.totalPage,
-            OpenLoader: false,
-          });
-        }
+        console.log("GetAllProduct Data : ", data.data.data);
+        console.log(
+          "Data : ",
+          data.data.data.filter((X) => X.isActive && !X.isArchive)
+        );
+        console.log(
+          "Count : ",
+          data.data.data.filter((X) => X.isActive && !X.isArchive).length
+        );
+        console.log(
+          "Page Count : ",
+          Math.ceil(
+            parseFloat(
+              data.data.data.filter((X) => X.isActive && !X.isArchive).length /
+                4
+            )
+          )
+        );
+        this.setState({
+          Product: data.data.data
+            .filter((X) => X.isActive && !X.isArchive)
+            .slice((CurrentPage - 1) * 4, CurrentPage * 4),
+          TotalPages: Math.ceil(
+            parseFloat(
+              data.data.data.filter((X) => X.isActive && !X.isArchive).length /
+                4
+            )
+          ),
+          PageNumber: data.data.currentPage,
+          OpenLoader: false,
+          OpenSnackBar: true,
+          Message: "Fetch Available Product",
+          // Message: data.data.message,
+        });
       })
       .catch((error) => {
         console.log("GetAllProduct Error : ", error);
@@ -186,33 +213,62 @@ export default class UserDashBoard extends Component {
       });
   };
 
+  handleSearch = async () => {
+    debugger;
+    if (this.state.Search.trim() === "" || this.state.Product === undefined) {
+      this.productServices(1);
+    } else {
+      console.log(
+        "Search Product Index : ",
+        this.state.Product.filter((x) =>
+          x.productName.includes(this.state.Search)
+        )
+      );
+      this.setState({
+        Product: this.state.Product.filter((x) =>
+          x.productName.includes(this.state.Search)
+        ),
+      });
+    }
+  };
+
   //
   GetMyOrderList = async (CurrentPage) => {
     console.log("Get My Order List Calling ... ");
     let data = {
       pageNumber: CurrentPage,
-      numberOfRecordPerPage: 4,
+      numberOfRecordPerPage: 3,
       userID: Number(localStorage.getItem("Customer_UserID")),
     };
-    this.setState({ OpenLoader: true });
-    cartServices
+    this.setState({ OpenLoader: true, Product: [] });
+    await cartServices
       .GetOrderProduct(data)
       .then((data) => {
         console.log("GetMyOrderList Data : ", data);
-        if (data.data.data === null && this.state.PageNumber > 1) {
-          this.setState({ PageNumber: this.state.PageNumber - 1 });
-          this.GetMyOrderList(this.state.PageNumber);
-        } else {
+        // debugger;
+        if (data.data.message === "CustomerDetailError") {
           this.setState({
-            Product: data.data.data,
-            TotalPages: data.data.totalPage,
             OpenLoader: false,
+            OpenSnackBar: true,
+            Message: "Please Fill Customer Detail",
           });
+          // return this.handleOpenCustomerSettingNav();
         }
+        this.setState({
+          Product: data.data.data.slice((CurrentPage - 1) * 3, CurrentPage * 3),
+          TotalPages: Math.ceil(parseFloat(data.data.data.length / 3)),
+          OpenLoader: false,
+          OpenSnackBar: true,
+          Message: data.data.message,
+        });
       })
       .catch((error) => {
         console.log("GetMyOrderList Error : ", error);
-        this.setState({ OpenLoader: false });
+        this.setState({
+          OpenLoader: false,
+          OpenSnackBar: true,
+          Message: "Something went wrong.",
+        });
       });
   };
 
@@ -224,21 +280,25 @@ export default class UserDashBoard extends Component {
       numberOfRecordPerPage: 4,
       userID: Number(localStorage.getItem("Customer_UserID")),
     };
-    this.setState({ OpenLoader: true });
-    cartServices
+    this.setState({ OpenLoader: true, Product: [] });
+    await cartServices
       .GetAllCardDetails(data)
       .then((data) => {
         console.log("GetAllCardDetails Data : ", data);
-        if (data.data.data === null && this.state.PageNumber > 1) {
-          this.setState({ PageNumber: this.state.PageNumber - 1 });
-          this.GetAllCardDetails(this.state.PageNumber);
-        } else {
-          this.setState({
-            Product: data.data.data,
-            TotalPages: data.data.totalPage,
-            OpenLoader: false,
-          });
-        }
+
+        this.setState({
+          Product: data.data.data
+            .filter((X) => X.isActive && !X.isOrder)
+            .slice((CurrentPage - 1) * 4, CurrentPage * 4),
+          TotalPages: Math.ceil(
+            parseFloat(
+              data.data.data.filter((X) => X.isActive && !X.isOrder).length / 4
+            )
+          ),
+          OpenLoader: false,
+          OpenSnackBar: true,
+          Message: data.data.message,
+        });
       })
       .catch((error) => {
         console.log("GetAllCardDetails Error : ", error);
@@ -254,34 +314,44 @@ export default class UserDashBoard extends Component {
       numberOfRecordPerPage: 4,
       userID: Number(localStorage.getItem("Customer_UserID")),
     };
-    this.setState({ OpenLoader: true });
-    wishlistServices
+    this.setState({ OpenLoader: true, Product: [] });
+    await wishlistServices
       .GetAllWishListDetails(data)
       .then((data) => {
         console.log("GetAllWishListDetails Data : ", data);
-        if (data.data.data === null && this.state.PageNumber > 1) {
-          this.setState({ PageNumber: this.state.PageNumber - 1 });
-          this.GetAllWishListDetails(this.state.PageNumber);
-        } else {
-          this.setState({
-            Product: data.data.data,
-            TotalPages: data.data.totalPage,
-            OpenLoader: false,
-          });
-        }
+
+        this.setState({
+          Product: data.data.data.slice((CurrentPage - 1) * 4, CurrentPage * 4),
+          TotalPages: Math.ceil(parseFloat(data.data.data.length / 4)),
+          OpenLoader: false,
+          OpenSnackBar: true,
+          Message: "Fetch WishList",
+        });
       })
       .catch((error) => {
         console.log("GetAllWishListDetails Error : ", error);
-        this.setState({ OpenLoader: false });
+        this.setState({
+          OpenLoader: false,
+          OpenSnackBar: true,
+          Message: "Something Went Wrong",
+        });
       });
   };
 
   GetCustomerDetail = async (UserID) => {
     console.log("GetCustomerDetail Calling....");
-    authServices
+    await authServices
       .GetCustomerDetail(UserID)
       .then((data) => {
         console.log("GetCustomerDetail Data : ", data);
+        if (!data.data.isSuccess) {
+          this.setState({
+            Message: data.data.message,
+            OpenSnackBar: true,
+          });
+          this.handleOpenUserAddress();
+          return;
+        }
         if (data.data.data !== null) {
           this.setState({
             FullName: data.data.data.fullName,
@@ -302,10 +372,19 @@ export default class UserDashBoard extends Component {
 
   GetCustomerAdderess = async (UserID) => {
     console.log("GetCustomerAdderess Calling....");
-    authServices
+
+    await authServices
       .GetCustomerAdderess(UserID)
       .then((data) => {
         console.log("GetCustomerAdderess Data : ", data);
+        if (!data.data.isSuccess) {
+          this.setState({
+            Message: data.data.message,
+            OpenSnackBar: true,
+          });
+          this.handleOpenUserAddress();
+          return;
+        }
         if (data.data.data !== null) {
           this.setState({
             Address1: data.data.data.address1,
@@ -333,30 +412,6 @@ export default class UserDashBoard extends Component {
     this.setState({
       Open: false,
       Update: false,
-      OpenBookModel: false,
-      RoomType: "", // Ac,NonAc
-      RoomScenerio: "", // Single Bed, Double Bed
-      RoomPrice: 0,
-      TotalRoomPrice: 0,
-      CustomerName: "",
-      Contact: "",
-      EmailID: "",
-      Address: "",
-      Age: 0,
-      CheckInTime: "",
-      CheckOutTime: "",
-      IDProof: "",
-      IDNumber: "",
-      Pincode: 0,
-      CustomerNameFlag: false,
-      ContactFlag: false,
-      EmailIDFlag: false,
-      AddressFlag: false,
-      AgeFlag: false,
-      CheckInTimeFlag: false,
-      CheckOutTimeFlag: false,
-      IDProofFlag: false,
-      IDNumberFlag: false,
     });
   };
 
@@ -373,9 +428,9 @@ export default class UserDashBoard extends Component {
     );
   };
 
-  handleSubmitUserDetail = () => {
+  handleSubmitUserDetail = async () => {
     let state = this.state;
-    this.CheckUserDetailValidation();
+    await this.CheckUserDetailValidation();
     if (
       state.FullNameFlag === false &&
       state.MobileNumberFlag === false &&
@@ -411,16 +466,17 @@ export default class UserDashBoard extends Component {
     }
   };
 
-  handleSubmitAddress = () => {
+  handleSubmitAddress = async () => {
     let state = this.state;
-    this.CheckValidation();
+    await this.CheckValidation();
+    debugger;
     if (
-      state.Address1Flag === false &&
-      state.CityFlag === false &&
-      state.DistictFlag === false &&
-      state.StateFlag === false &&
-      state.CountryFlag === false &&
-      state.PincodeFlag === false
+      state.Address1 !== "" &&
+      state.City !== "" &&
+      state.Distict !== "" &&
+      state.State !== "" &&
+      state.Country !== "" &&
+      state.Pincode !== ""
     ) {
       console.log("Acceptable");
       let data = {
@@ -453,6 +509,10 @@ export default class UserDashBoard extends Component {
         });
     } else {
       console.log("Please Fill Required Field");
+      this.setState({
+        OpenSnackBar: true,
+        Message: "Please Enter Required Field",
+      });
     }
   };
 
@@ -489,6 +549,8 @@ export default class UserDashBoard extends Component {
       CountryFlag: false,
       PincodeFlag: false,
     });
+
+    debugger;
 
     if (state.Address1 === "") {
       this.setState({ Address1Flag: true });
@@ -574,7 +636,7 @@ export default class UserDashBoard extends Component {
     if (this.state.FeedBack) {
       let data = {
         feedback: this.state.FeedBack,
-        userID: Number(localStorage.getItem("Customer_UserID")),
+        userId: Number(localStorage.getItem("Customer_UserID")),
       };
 
       await feedbackServices
@@ -641,8 +703,12 @@ export default class UserDashBoard extends Component {
   };
 
   //
-  handleOpenHomeNav = () => {
+  handleOpenHomeNav = async () => {
     console.log("Handle Open Home Nav Calling .....");
+
+    await this.productServices(
+      this.state.PageNumber == 0 ? 1 : this.state.PageNumber
+    );
 
     localStorage.setItem("OpenUserHome", true);
     localStorage.setItem("OpenMyOrder", false);
@@ -662,15 +728,15 @@ export default class UserDashBoard extends Component {
       OpenUserDetail: false,
       OpenUserAddress: false,
     });
-
-    this.productServices(
-      this.state.PageNumber == 0 ? 1 : this.state.PageNumber
-    );
   };
 
   //
-  handleOpenMyOrderNav = () => {
+  handleOpenMyOrderNav = async () => {
     console.log("Handle Open My Order Nav Calling .....");
+
+    await this.GetMyOrderList(
+      this.state.PageNumber == 0 ? 1 : this.state.PageNumber
+    );
 
     localStorage.setItem("OpenUserHome", false);
     localStorage.setItem("OpenMyOrder", true);
@@ -689,13 +755,15 @@ export default class UserDashBoard extends Component {
       OpenUserDetail: false,
       OpenUserAddress: false,
     });
-
-    this.GetMyOrderList(this.state.PageNumber == 0 ? 1 : this.state.PageNumber);
   };
 
   //
-  handleOpenCartNav = () => {
+  handleOpenCartNav = async () => {
     console.log("Handle Open Cart Nav Calling .....");
+
+    await this.GetAllCardDetails(
+      this.state.PageNumber == 0 ? 1 : this.state.PageNumber
+    );
 
     localStorage.setItem("OpenUserHome", false);
     localStorage.setItem("OpenMyOrder", false);
@@ -715,15 +783,15 @@ export default class UserDashBoard extends Component {
       OpenUserDetail: false,
       OpenUserAddress: false,
     });
-
-    this.GetAllCardDetails(
-      this.state.PageNumber == 0 ? 1 : this.state.PageNumber
-    );
   };
 
   //
-  handleOpenWishListNav = () => {
+  handleOpenWishListNav = async () => {
     console.log("Handle Open Wish List Nav Calling .....");
+
+    await this.GetAllWishListDetails(
+      this.state.PageNumber == 0 ? 1 : this.state.PageNumber
+    );
 
     localStorage.setItem("OpenUserHome", false);
     localStorage.setItem("OpenMyOrder", false);
@@ -743,10 +811,6 @@ export default class UserDashBoard extends Component {
       OpenUserDetail: false,
       OpenUserAddress: false,
     });
-
-    this.GetAllWishListDetails(
-      this.state.PageNumber == 0 ? 1 : this.state.PageNumber
-    );
   };
 
   //
@@ -866,6 +930,7 @@ export default class UserDashBoard extends Component {
             style={{ margin: 20, width: 500 }}
             size="small"
             name="FullName"
+            error={state.FullName === "" ? true : false}
             value={state.FullName}
             onChange={this.handleChanges}
           />
@@ -875,6 +940,7 @@ export default class UserDashBoard extends Component {
             style={{ margin: 20, width: 500 }}
             size="small"
             name="EmailID"
+            error={state.EmailID === "" ? true : false}
             value={state.EmailID}
             onChange={this.handleChanges}
           />
@@ -884,6 +950,7 @@ export default class UserDashBoard extends Component {
             style={{ margin: 20, width: 500 }}
             size="small"
             name="MobileNumber"
+            error={state.MobileNumber === "" ? true : false}
             value={state.MobileNumber}
             onChange={this.handleChanges}
           />
@@ -911,6 +978,7 @@ export default class UserDashBoard extends Component {
             variant="outlined"
             style={{ margin: 10, width: 500 }}
             size="small"
+            error={state.Address1 === "" ? true : false}
             value={state.Address1}
             onChange={this.handleChanges}
           />
@@ -920,6 +988,7 @@ export default class UserDashBoard extends Component {
             variant="outlined"
             style={{ margin: 10, width: 500 }}
             size="small"
+            error={state.Address2 === "" ? true : false}
             value={state.Address2}
             onChange={this.handleChanges}
           />
@@ -929,6 +998,7 @@ export default class UserDashBoard extends Component {
             variant="outlined"
             style={{ margin: 10, width: 500 }}
             size="small"
+            error={state.City === "" ? true : false}
             value={state.City}
             onChange={this.handleChanges}
           />
@@ -938,6 +1008,7 @@ export default class UserDashBoard extends Component {
             variant="outlined"
             style={{ margin: 10, width: 500 }}
             size="small"
+            error={state.Distict === "" ? true : false}
             value={state.Distict}
             onChange={this.handleChanges}
           />
@@ -947,6 +1018,7 @@ export default class UserDashBoard extends Component {
             variant="outlined"
             style={{ margin: 10, width: 500 }}
             size="small"
+            error={state.State === "" ? true : false}
             value={state.State}
             onChange={this.handleChanges}
           />
@@ -956,15 +1028,18 @@ export default class UserDashBoard extends Component {
             variant="outlined"
             style={{ margin: 10, width: 500 }}
             size="small"
+            error={state.Country === "" ? true : false}
             value={state.Country}
             onChange={this.handleChanges}
           />
           <TextField
+            type="number"
             label="Pincode"
             name="Pincode"
             variant="outlined"
             style={{ margin: "10px 0 20px 0", width: 500 }}
             size="small"
+            error={state.Pincode === "" ? true : false}
             value={state.Pincode}
             onChange={this.handleChanges}
           />
@@ -1031,124 +1106,6 @@ export default class UserDashBoard extends Component {
     );
   };
 
-  handleBookingList = (e) => {
-    let self = this;
-    return Array.isArray(this.state.BookingList) &&
-      this.state.BookingList.length > 0
-      ? this.state.BookingList.map(function (data, index) {
-          return (
-            <TableRow
-              key={index}
-              style={{
-                height: "50px",
-                display: "flex",
-                borderBottom: "0.5px solid lightgray",
-              }}
-            >
-              <div className="Row" style={{ flex: 1 }}>
-                {data.customerID}
-              </div>
-              <div className="Row" style={{ flex: 0.5 }}>
-                {data.roomType}
-              </div>
-              <div className="Row" style={{ flex: 1 }}>
-                {data.roomScenerio}
-              </div>
-              <div className="Row" style={{ flex: 1 }}>
-                {data.roomPrice}
-              </div>
-              <div className="Row" style={{ flex: 2 }}>
-                {data.customerName}
-              </div>
-              <div className="Row" style={{ flex: 1 }}>
-                {data.contact}
-              </div>
-              <div className="Row" style={{ flex: 2 }}>
-                {data.checkInTime}
-              </div>
-              <div className="Row" style={{ flex: 2 }}>
-                {data.checkOutTime}
-              </div>
-              <div className="Row" style={{ flex: 1 }}>
-                {data.isPaid ? <>Paid</> : <>Not Paid</>}
-              </div>
-              <div className="Row" style={{ flex: 2 }}>
-                {!data.isPaid ? (
-                  <Button
-                    variant="contained"
-                    color="secondary"
-                    onClick={() => {
-                      self.handleOpenPayModel(data.customerID);
-                    }}
-                  >
-                    Paid
-                  </Button>
-                ) : null}
-                <IconButton
-                  variant="outlined"
-                  color="primary"
-                  // size="medium"
-                  onClick={() => {
-                    self.handleEditMyBooking(data);
-                  }}
-                  // style={{ margin: '0 px 0 0' }}
-                >
-                  <EditIcon size="medium" />
-                </IconButton>
-                <IconButton
-                  variant="outlined"
-                  style={{ color: "black" }}
-                  onClick={() => {
-                    self.handleDeleteBookingApplication(data.customerID);
-                  }}
-                >
-                  <DeleteIcon size="medium" />
-                </IconButton>
-              </div>
-            </TableRow>
-          );
-        })
-      : null;
-  };
-
-  handleEditMyBooking = (data) => {
-    console.log("handleEditMyBooking Data : ", data);
-
-    if (data.roomType === "Ac") {
-      if (data.roomScenerio === "Single Bed") {
-        this.setState({ RoomPrice: this.state.AcSingleBedRoomPrice });
-      } else {
-        this.setState({ RoomPrice: this.state.AcDoubleBedRoomPrice });
-      }
-    } else {
-      if (data.roomScenerio === "Single Bed") {
-        this.setState({ RoomPrice: this.state.NonAcSingleBedRoomPrice });
-      } else {
-        this.setState({ RoomPrice: this.state.NonAcDoubleBedRoomPrice });
-      }
-    }
-
-    this.setState({
-      Open: true,
-      Update: true,
-      OpenBookModel: true,
-      CustomerID: data.customerID,
-      RoomType: data.roomType,
-      RoomScenerio: data.roomScenerio,
-      TotalRoomPrice: Number(data.roomPrice),
-      CustomerName: data.customerName,
-      Contact: data.contact,
-      EmailID: data.emailID,
-      Address: data.address,
-      Age: Number(data.age),
-      CheckInTime: data.checkInTime,
-      CheckOutTime: data.checkOutTime,
-      IDProof: data.idProof,
-      IDNumber: data.idNumber,
-      Pincode: data.pinCode,
-    });
-  };
-
   render() {
     let state = this.state;
     let self = this;
@@ -1156,24 +1113,41 @@ export default class UserDashBoard extends Component {
     return (
       <div className="UserDashBoard-Container">
         <div className="Sub-Container">
-          <div className="Header">
-            <AppBar position="static" style={{ backgroundColor: "#202020" }}>
+          <div className="Header" style={{ height: "7.5%" }}>
+            <AppBar
+              position="static"
+              style={{ backgroundColor: "#0000ff", color: "white" }}
+            >
               <Toolbar>
                 <Typography
                   variant="h6"
                   style={{
                     flexGrow: 3,
                     display: "flex",
-                    padding: "5px 0 0 200px",
+                    padding: "5px 0 0 100px",
                     boxSizing: "border-box",
                   }}
                 >
-                  E-Shopping &nbsp;
+                  Book Selling Mart &nbsp;
                   <div style={{ margin: "3px 0 0 0" }}>
                     <ShopIcon />
                   </div>
                 </Typography>
-                <div className="search" style={{ flexGrow: 0.5 }}>
+                <Typography variant="h6" style={{ margin: "0 100px 0 0" }}>
+                  User Dashboard
+                </Typography>
+                <div
+                  className="search"
+                  style={{
+                    flexGrow: 0.5,
+                    backgroundColor: "white",
+                    color: "black",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => {
+                    this.handleSearch();
+                  }}
+                >
                   <div className="searchIcon">
                     <SearchIcon />
                   </div>
@@ -1183,6 +1157,9 @@ export default class UserDashBoard extends Component {
                       root: "inputRoot",
                       input: "inputInput",
                     }}
+                    name="Search"
+                    value={this.state.Search}
+                    onChange={this.handleChanges}
                     inputProps={{ "aria-label": "search" }}
                   />
                 </div>
@@ -1705,16 +1682,9 @@ export default class UserDashBoard extends Component {
                 </Modal>
               </div>
             </div>
-            {/* <Pagination
-              count={this.state.TotalPages}
-              Page={this.state.PageNumber}
-              onChange={this.handlePaging}
-              variant="outlined"
-              shape="rounded"
-              color="secondary"
-            /> */}
           </div>
         </div>
+
         <Backdrop
           style={{ zIndex: "1", color: "#fff" }}
           open={this.state.OpenLoader}

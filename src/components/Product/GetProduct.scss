@@ -24,3 +24,24 @@
         background-color: white;
     }
 }
+
+.Model-Open-Getway-Body {
+    height: 80%;
+    width: 100%;
+    font-family: "Roboto";
+
+    .Model-Create-Ticket-Body-Row {
+        margin: 15px;
+        box-sizing: border-box;
+        font-weight: 550;
+        display: flex;
+        align-items: center;
+    }
+}
+
+.CartDetail {
+    display: flex;
+    justify-content: center;
+}
+
+

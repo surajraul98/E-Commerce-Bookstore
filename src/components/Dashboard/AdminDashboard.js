@@ -6,7 +6,7 @@ import FeedbackServices from "../../services/FeedbackServices";
 import ProductServices from "../../services/ProductServices";
 import AuthServices from "../../services/AuthServices";
 import CartServices from "../../services/CartServices";
-
+import Rating from "@material-ui/lab/Rating";
 import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
@@ -14,7 +14,6 @@ import Button from "@material-ui/core/Button";
 import IconButton from "@material-ui/core/IconButton";
 import HomeIcon from "@material-ui/icons/Home";
 import ViewListIcon from "@material-ui/icons/ViewList";
-import BookIcon from "@material-ui/icons/Book";
 import ArchiveIcon from "@material-ui/icons/Archive";
 import DeleteIcon from "@material-ui/icons/Delete";
 import TextField from "@material-ui/core/TextField";
@@ -28,12 +27,10 @@ import CircularProgress from "@material-ui/core/CircularProgress";
 import Snackbar from "@material-ui/core/Snackbar";
 import CloseIcon from "@material-ui/icons/Close";
 import ErrorIcon from "@material-ui/icons/Error";
-import SettingsIcon from "@material-ui/icons/Settings";
 import ShopIcon from "@material-ui/icons/Shop";
 import SearchIcon from "@material-ui/icons/Search";
 import InputBase from "@material-ui/core/InputBase";
 import PeopleAltIcon from "@material-ui/icons/PeopleAlt";
-import EditIcon from "@material-ui/icons/Edit";
 import InputLabel from "@material-ui/core/InputLabel";
 import MenuItem from "@material-ui/core/MenuItem";
 import FormControl from "@material-ui/core/FormControl";
@@ -140,23 +137,134 @@ export default class AdminDashboard extends Component {
     console.log("Get Jobs List Calling ... ");
     let data = {
       pageNumber: CurrentPage,
-      numberOfRecordPerPage: 4,
+      numberOfRecordPerPage: 10,
     };
-    this.setState({ OpenLoader: true });
-    productServices
+    this.setState({ OpenLoader: true, Product: [] });
+    await productServices
       .GetAllProduct(data)
       .then((data) => {
-        console.log("GetAllProduct Data : ", data);
-        // debugger
-        if (data.data.data === null && this.state.PageNumber > 1) {
-          this.setState({ PageNumber: this.state.PageNumber - 1 });
-          this.productServices(this.state.PageNumber);
-        } else {
+        console.log("GetAllProduct Data : ", data.data.data);
+        console.log(
+          "Data : ",
+          data.data.data.filter((X) => X.isActive && !X.isArchive)
+        );
+        console.log(
+          "Count : ",
+          data.data.data.filter((X) => X.isActive && !X.isArchive).length
+        );
+        console.log(
+          "Page Count : ",
+          Math.ceil(
+            parseFloat(
+              data.data.data.filter((X) => X.isActive && !X.isArchive).length /
+                4
+            )
+          )
+        );
+        this.setState({
+          Product: data.data.data
+            .filter((X) => X.isActive && !X.isArchive)
+            .slice((CurrentPage - 1) * 4, CurrentPage * 4)
+            .reverse(),
+          TotalPages: Math.ceil(
+            parseFloat(
+              data.data.data.filter((X) => X.isActive && !X.isArchive).length /
+                4
+            )
+          ),
+          PageNumber: data.data.currentPage,
+          OpenLoader: false,
+          OpenSnackBar: true,
+          Message: "Fetch Available Product",
+          // Message: data.data.message,
+        });
+      })
+      .catch((error) => {
+        console.log("GetAllProduct Error : ", error);
+        this.setState({ OpenLoader: false });
+      });
+  };
+
+  //
+  GetArchiveList = async (CurrentPage) => {
+    console.log("Get Jobs List Calling ... ");
+    let data = {
+      pageNumber: CurrentPage,
+      numberOfRecordPerPage: 10,
+    };
+    this.setState({ OpenLoader: true, Product: [] });
+    await productServices
+      .GetAllProduct(data)
+      .then((data) => {
+        console.log("GetAllProduct Data : ", data.data.data);
+        console.log(
+          "Data : ",
+          data.data.data.filter((X) => X.isActive && X.isArchive)
+        );
+        console.log(
+          "Count : ",
+          data.data.data.filter((X) => X.isActive && X.isArchive).length
+        );
+        console.log(
+          "Page Count : ",
+          Math.ceil(
+            parseFloat(
+              data.data.data.filter((X) => X.isActive && X.isArchive).length / 4
+            )
+          )
+        );
+        this.setState({
+          Product: data.data.data
+            .filter((X) => X.isActive && X.isArchive)
+            .slice((CurrentPage - 1) * 4, CurrentPage * 4)
+            .reverse(),
+          TotalPages: Math.ceil(
+            parseFloat(
+              data.data.data.filter((X) => X.isActive && X.isArchive).length / 4
+            )
+          ),
+          PageNumber: data.data.currentPage,
+          OpenLoader: false,
+          OpenSnackBar: true,
+          Message: "Fetch Available Product",
+          // Message: data.data.message,
+        });
+      })
+      .catch((error) => {
+        console.log("GetAllProduct Error : ", error);
+        this.setState({ OpenLoader: false });
+      });
+  };
+
+  GetTrashList = async (CurrentPage) => {
+    console.log("Get Jobs List Calling ... ");
+    let data = {
+      pageNumber: CurrentPage,
+      numberOfRecordPerPage: 10,
+    };
+    debugger;
+    this.setState({ OpenLoader: true, Product: [] });
+    await productServices
+      .GetAllProduct(data)
+      .then((data) => {
+        debugger;
+        if (data.data.data.filter((X) => !X.isActive && !X.isArchive)) {
           this.setState({
-            Product: data.data.data,
-            TotalPages: data.data.totalPage,
+            Product: data.data.data
+              .filter((X) => !X.isActive && !X.isArchive)
+              .slice((CurrentPage - 1) * 4, CurrentPage * 4)
+              .reverse(),
+            TotalPages: Math.ceil(
+              parseFloat(
+                data.data.data.filter((X) => !X.isActive && !X.isArchive)
+                  .length / 4
+              )
+            ),
             PageNumber: data.data.currentPage,
             OpenLoader: false,
+            OpenSnackBar: true,
+            Message: "Fetch Available Product",
+            // Message: data.data.message,
           });
         }
       })
@@ -167,82 +275,38 @@ export default class AdminDashboard extends Component {
   };
 
   //
-  GetArchiveList = (CurrentPage) => {
-    let data = {
-      pageNumber: CurrentPage,
-      numberOfRecordPerPage: 4,
-    };
-    this.setState({ OpenLoader: true });
-    productServices
-      .GetArchiveProduct(data)
-      .then((data) => {
-        console.log("GetArchiveList Data : ", data);
-        if (data.data.data === null && this.state.PageNumber > 1) {
-          this.setState({ PageNumber: this.state.PageNumber - 1 });
-          this.GetArchiveList(this.state.PageNumber);
-        } else {
-          this.setState({
-            Product: data.data.data,
-            TotalPages: data.data.totalPage,
-            OpenLoader: false,
-          });
-        }
-      })
-      .catch((error) => {
-        console.log("GetArchiveList Error : ", error);
-        this.setState({ OpenLoader: false });
-      });
-  };
-
-  //
-  GetTrashList = (CurrentPage) => {
-    let data = {
-      pageNumber: CurrentPage,
-      numberOfRecordPerPage: 4,
-    };
-    this.setState({ OpenLoader: true });
-    productServices
-      .GetTrashProduct(data)
-      .then((data) => {
-        console.log("GetTrashProduct Data : ", data);
-        if (data.data.data === null && this.state.PageNumber > 1) {
-          this.setState({ PageNumber: this.state.PageNumber - 1 });
-          this.GetTrashList(this.state.PageNumber);
-        } else {
-          this.setState({
-            Product: data.data.data,
-            TotalPages: data.data.totalPage,
-            OpenLoader: false,
-          });
-        }
-      })
-      .catch((error) => {
-        console.log("GetTrashProduct Error : ", error);
-        this.setState({ OpenLoader: false });
-      });
-  };
-
-  //
   GetCustomerList = (CurrentPage) => {
     let data = {
       pageNumber: CurrentPage,
       numberOfRecordPerPage: 8,
     };
-    this.setState({ OpenLoader: true });
+    this.setState({ OpenLoader: true, Product: [] });
     authServices
       .CustomerList(data)
       .then((data) => {
-        console.log("GetCustomerList Data : ", data);
-        if (data.data.data === null && this.state.PageNumber > 1) {
-          this.setState({ PageNumber: this.state.PageNumber - 1 });
-          this.GetCustomerList(this.state.PageNumber);
-        } else {
-          this.setState({
-            Product: data.data.data,
-            TotalPages: data.data.totalPage,
-            OpenLoader: false,
-          });
-        }
+        console.log("GetCustomerList Data : ", data.data.data);
+        console.log(
+          "Length : ",
+          Math.ceil(
+            parseFloat(
+              data.data.data.filter((x) => x.Role === "customer").length / 10
+            )
+          )
+        );
+        this.setState({
+          Product: data.data.data
+            .filter((x) => x.Role === "customer")
+            .slice((CurrentPage - 1) * 10, CurrentPage * 10)
+            .reverse(),
+          TotalPages: Math.ceil(
+            parseFloat(
+              data.data.data.filter((x) => x.Role === "customer").length / 10
+            )
+          ),
+          OpenLoader: false,
+          OpenSnackBar: true,
+          Message: data.data.message,
+        });
       })
       .catch((error) => {
         console.log("GetCustomerList Error : ", error);
@@ -258,21 +322,23 @@ export default class AdminDashboard extends Component {
       numberOfRecordPerPage: 8,
       userID: -1,
     };
-    this.setState({ OpenLoader: true });
+    this.setState({ OpenLoader: true, Product: [] });
     cartServices
-      .GetOrderProduct(data)
+      .GetAllOrderProduct(data)
       .then((data) => {
         console.log("GetMyOrderList Data : ", data);
-        if (data.data.data === null && this.state.PageNumber > 1) {
-          this.setState({ PageNumber: this.state.PageNumber - 1 });
-          this.GetAllOrderList(this.state.PageNumber);
-        } else {
-          this.setState({
-            Product: data.data.data,
-            TotalPages: data.data.totalPage,
-            OpenLoader: false,
-          });
-        }
+        this.setState({
+          Product: data.data.data
+            .filter((X) => X.isOrder)
+            .slice((CurrentPage - 1) * 10, CurrentPage * 10)
+            .reverse(),
+          TotalPages: Math.ceil(
+            parseFloat(data.data.data.filter((X) => X.isOrder).length / 10)
+          ),
+          OpenLoader: false,
+          OpenSnackBar: true,
+          Message: data.data.message,
+        });
       })
       .catch((error) => {
         console.log("GetMyOrderList Error : ", error);
@@ -286,132 +352,31 @@ export default class AdminDashboard extends Component {
       pageNumber: CurrentPage,
       numberOfRecordPerPage: 8,
     };
-
+    this.setState({ OpenLoader: true, Product: [] });
     await feedbackServices
       .GetFeedbacks(data)
       .then((data) => {
         console.log("Feedback Data : ", data);
         this.setState({
+          OpenLoader: false,
           OpenSnackBar: true,
           Open: false,
           Message: data.data.message,
-          Product: data.data.data,
-          TotalPages: data.data.totalPage,
+          Product: data.data.data
+            .slice((CurrentPage - 1) * 10, CurrentPage * 10)
+            .reverse(),
+          TotalPages: Math.ceil(parseFloat(data.data.data.length / 10)),
         });
       })
       .catch((error) => {
         console.log("Feedback Error : ", error);
         this.setState({
           OpenSnackBar: true,
-
+          OpenLoader: false,
           Open: false,
           Message: "Something Went Wrong.",
         });
       });
-  };
-
-  handleSubmit = (e) => {
-    console.log("Handle Submit Calling ... ");
-    let state = this.state;
-
-    if (state.ContactFlag || state.EmailIDFlag) {
-      return;
-    }
-
-    this.CheckValidity();
-    if (
-      state.TotalRoomFlag === false &&
-      state.AcRoomFlag === false &&
-      state.NonAcRoomFlag === false &&
-      state.NoOfAcSingleBedRoomFlag === false &&
-      state.NoOfNonAcSingleBedRoomFlag === false &&
-      state.NoOfAcDoubleBedRoomFlag === false &&
-      state.NoOfNonAcDoubleBedRoomFlag === false
-    ) {
-      console.log("Acceptable");
-      this.setState({ OpenLoader: true });
-    } else {
-      console.log("Please Fill Required Field");
-      this.setState({
-        OpenSnackBar: true,
-        Message: "Please Fill Required Field",
-        OpenLoader: false,
-      });
-    }
-  };
-
-  handleUpdate = () => {
-    let State = this.state;
-
-    if (State.ContactFlag || State.EmailIDFlag) {
-      return;
-    }
-
-    if (
-      State.CustomerName !== "" &&
-      (Number(State.TotalRoomPrice) === 0 || State.TotalRoomPrice === "")
-    ) {
-      console.log("Invalid Timing...");
-      this.setState({
-        CheckInTimeFlag: true,
-        CheckOutTimeFlag: true,
-        OpenSnackBar: true,
-        Message: "Please Fill Check In Time & Check Out Time.",
-      });
-      return;
-    }
-
-    this.CheckValidity1();
-
-    if (
-      State.CustomerName !== "" &&
-      State.Contact !== "" &&
-      State.EmailID !== "" &&
-      State.Address !== "" &&
-      State.Age !== "" &&
-      State.CheckInTime !== "" &&
-      State.CheckOutTime !== "" &&
-      State.IDProof !== "" &&
-      State.IDNumber !== ""
-    ) {
-      let data = {
-        customerID: Number(State.CustomerID),
-        roomType: State.RoomType,
-        roomScenerio: State.RoomScenerio,
-        roomPrice: Number(State.TotalRoomPrice),
-        customerName: State.CustomerName,
-        contact: State.Contact,
-        emailID: State.EmailID,
-        address: State.Address,
-        age: State.Age.toString(),
-        checkInTime: State.CheckInTime,
-        checkOutTime: State.CheckOutTime,
-        idProof: State.IDProof,
-        idNumber: State.IDNumber,
-        pinCode: State.Pincode,
-      };
-    } else {
-      console.log("Please Fill Required Field");
-      this.setState({
-        OpenSnackBar: true,
-        Message: "Please Fill Required Field",
-      });
-    }
-  };
-
-  handleDeleteProjectPermanently = (ProjectID) => {
-    console.log("Handle Delete Project Permanently Calling ... ");
-    let data = {
-      projectID: ProjectID,
-    };
-  };
-
-  handleDeleteApplication = (ID) => {
-    console.log("Handle Reject Application Calling .... ID : ", ID);
-    this.setState({
-      RejectApplication: true,
-      ApplicationID: ID,
-    });
   };
 
   handleMenuButton = (e) => {
@@ -427,37 +392,7 @@ export default class AdminDashboard extends Component {
     this.setState({
       open: true,
       OpenHome: true,
-      OpenTrash: false,
-      JobPageNumber: 1,
-      JobID: 0,
-      JobName: "",
-      JobDescription: "",
-      JobStream: "",
-      JobField: "",
-      JobSalary: "",
-      JobDocumentUrl: "",
-      IsActive: false,
-      TotalPages: !this.state.OpenInsert ? 0 : this.state.TotalPages,
     });
-  };
-
-  handleOpenPayModel = (CustomerID) => {
-    console.log("handleOpenPayModel Calling ... Customer ID : ", CustomerID);
-    if (CustomerID !== undefined && CustomerID !== 0) {
-      this.setState({ CustomerID: CustomerID, OpenEdit: true });
-    } else {
-      this.setState({ OpenSnackBar: true, Message: "Something Went Wrong" });
-    }
-  };
-
-  handlePayCustomerBill = (CustomerID) => {
-    if (CustomerID !== undefined) {
-      let data = {
-        customerID: CustomerID,
-      };
-    } else {
-      console.log("Invalid Customer ID");
-    }
   };
 
   handleClose = () => {
@@ -479,8 +414,13 @@ export default class AdminDashboard extends Component {
   };
 
   //
-  handleOpenHomeNav = () => {
+  handleOpenHomeNav = async () => {
     console.log("Handle Open List Calling ... ");
+
+    await this.productServices(
+      this.state.PageNumber == 0 ? 1 : this.state.PageNumber
+    );
+
     //
     localStorage.setItem("OpenHome", true);
     localStorage.setItem("OpenAddProduct", false);
@@ -489,6 +429,9 @@ export default class AdminDashboard extends Component {
     localStorage.setItem("OpenCustomerList", false);
     localStorage.setItem("OpenOrderList", false);
     localStorage.setItem("OpenFeedBack", false);
+    //
+    localStorage.setItem("IsEdit", false);
+    localStorage.setItem("productDataObject", null);
     //
     this.setState({
       PageNumber: 1,
@@ -501,9 +444,6 @@ export default class AdminDashboard extends Component {
       OpenFeedBack: false,
     });
     //
-    this.productServices(
-      this.state.PageNumber == 0 ? 1 : this.state.PageNumber
-    );
   };
 
   //
@@ -518,6 +458,9 @@ export default class AdminDashboard extends Component {
     localStorage.setItem("OpenOrderList", false);
     localStorage.setItem("OpenFeedBack", false);
     //
+    localStorage.setItem("IsEdit", false);
+    localStorage.setItem("productDataObject", null);
+    //
     this.setState({
       PageNumber: 1,
       OpenHome: false,
@@ -531,8 +474,37 @@ export default class AdminDashboard extends Component {
   };
 
   //
-  handleOpenArchiveNav = () => {
+  handleOpenEditProductNav = () => {
+    console.log("Handle Add Product Nav Calling ... ");
+    //
+    localStorage.setItem("OpenHome", false);
+    localStorage.setItem("OpenAddProduct", true);
+    localStorage.setItem("OpenArchive", false);
+    localStorage.setItem("OpenTrash", false);
+    localStorage.setItem("OpenCustomerList", false);
+    localStorage.setItem("OpenOrderList", false);
+    localStorage.setItem("OpenFeedBack", false);
+
+    //
+    this.setState({
+      PageNumber: 1,
+      OpenHome: false,
+      OpenAddProduct: true,
+      OpenArchive: false,
+      OpenTrash: false,
+      OpenCustomerList: false,
+      OpenOrderList: false,
+      OpenFeedBack: false,
+    });
+  };
+
+  //
+  handleOpenArchiveNav = async () => {
     console.log("Handle Open Archive Nav Calling ... ");
+
+    await this.GetArchiveList(
+      this.state.PageNumber == 0 ? 1 : this.state.PageNumber
+    );
 
     localStorage.setItem("OpenHome", false);
     localStorage.setItem("OpenAddProduct", false);
@@ -541,7 +513,10 @@ export default class AdminDashboard extends Component {
     localStorage.setItem("OpenCustomerList", false);
     localStorage.setItem("OpenOrderList", false);
     localStorage.setItem("OpenFeedBack", false);
-
+    //
+    localStorage.setItem("IsEdit", false);
+    localStorage.setItem("productDataObject", null);
+    //
     this.setState({
       PageNumber: 1,
       OpenHome: false,
@@ -553,12 +528,18 @@ export default class AdminDashboard extends Component {
       OpenFeedBack: false,
     });
 
-    this.GetArchiveList(this.state.PageNumber == 0 ? 1 : this.state.PageNumber);
+    // this.productServices(
+    //   this.state.PageNumber == 0 ? 1 : this.state.PageNumber
+    // );
   };
 
   //
-  handleOpenTrashNav = () => {
+  handleOpenTrashNav = async () => {
     console.log("Handle Open Trash Nav Calling...");
+
+    await this.GetTrashList(
+      this.state.PageNumber == 0 ? 1 : this.state.PageNumber
+    );
 
     localStorage.setItem("OpenHome", false);
     localStorage.setItem("OpenAddProduct", false);
@@ -567,7 +548,10 @@ export default class AdminDashboard extends Component {
     localStorage.setItem("OpenCustomerList", false);
     localStorage.setItem("OpenOrderList", false);
     localStorage.setItem("OpenFeedBack", false);
-
+    //
+    localStorage.setItem("IsEdit", false);
+    localStorage.setItem("productDataObject", null);
+    //
     this.setState({
       PageNumber: 1,
       OpenHome: false,
@@ -579,7 +563,9 @@ export default class AdminDashboard extends Component {
       OpenFeedBack: false,
     });
 
-    this.GetTrashList(this.state.PageNumber == 0 ? 1 : this.state.PageNumber);
+    // this.productServices(
+    //   this.state.PageNumber == 0 ? 1 : this.state.PageNumber
+    // );
   };
 
   //
@@ -593,6 +579,9 @@ export default class AdminDashboard extends Component {
     localStorage.setItem("OpenCustomerList", true);
     localStorage.setItem("OpenOrderList", false);
     localStorage.setItem("OpenFeedBack", false);
+    //
+    localStorage.setItem("IsEdit", false);
+    localStorage.setItem("productDataObject", null);
     //
     this.setState({
       PageNumber: 1,
@@ -620,6 +609,9 @@ export default class AdminDashboard extends Component {
     localStorage.setItem("OpenOrderList", true);
     localStorage.setItem("OpenFeedBack", false);
     //
+    localStorage.setItem("IsEdit", false);
+    localStorage.setItem("productDataObject", null);
+    //
     this.setState({
       PageNumber: 1,
       OpenHome: false,
@@ -646,6 +638,9 @@ export default class AdminDashboard extends Component {
     localStorage.setItem("OpenOrderList", false);
     localStorage.setItem("OpenFeedBack", true);
     //
+    localStorage.setItem("IsEdit", false);
+    localStorage.setItem("productDataObject", null);
+    //
     this.setState({
       // PageNumber: 1,
       OpenHome: false,
@@ -658,164 +653,6 @@ export default class AdminDashboard extends Component {
     });
 
     this.GetFeedBack(this.state.PageNumber);
-  };
-
-  CheckValidity = () => {
-    console.log("Check Validity Calling...");
-    this.setState({
-      TotalRoomFlag: false,
-      AcRoomFlag: false,
-      NonAcRoomFlag: false,
-      NoOfAcSingleBedRoomFlag: false,
-      NoOfNonAcSingleBedRoomFlag: false,
-      NoOfAcDoubleBedRoomFlag: false,
-      NoOfNonAcDoubleBedRoomFlag: false,
-    });
-    if (this.state.TotalRoom === 0 || this.state.TotalRoom === "") {
-      this.setState({ TotalRoomFlag: true });
-    }
-    if (this.state.AcRoom === 0 || this.state.AcRoom === "") {
-      this.setState({ AcRoomFlag: true });
-    }
-    if (this.state.NonAcRoom === "" || this.state.NonAcRoom === 0) {
-      this.setState({ NonAcRoomFlag: true });
-    }
-
-    if (
-      this.state.NoOfAcSingleBedRoom === 0 ||
-      this.state.NoOfAcSingleBedRoom === ""
-    ) {
-      this.setState({ NoOfAcSingleBedRoomFlag: true });
-    }
-    if (
-      this.state.NoOfNonAcSingleBedRoom === 0 ||
-      this.state.NoOfNonAcSingleBedRoom === ""
-    ) {
-      this.setState({ NoOfNonAcSingleBedRoomFlag: true });
-    }
-    if (
-      this.state.NoOfAcDoubleBedRoom === "" ||
-      this.state.NoOfAcDoubleBedRoom === 0
-    ) {
-      this.setState({ NoOfAcDoubleBedRoomFlag: true });
-    }
-
-    if (
-      this.state.NoOfNonAcDoubleBedRoom === "" ||
-      this.state.NoOfNonAcDoubleBedRoom === 0
-    ) {
-      this.setState({ NoOfNonAcDoubleBedRoomFlag: true });
-    }
-  };
-
-  CheckValidity1() {
-    console.log("Check Validity Calling...");
-    this.setState({
-      CustomerNameFlag: false,
-      ContactFlag: false,
-      EmailIDFlag: false,
-      AddressFlag: false,
-      AgeFlag: false,
-      CheckInTimeFlag: false,
-      CheckOutTimeFlag: false,
-      IDProofFlag: false,
-      IDNumberFlag: false,
-    });
-
-    if (this.state.CustomerName === "") {
-      this.setState({ CustomerNameFlag: true });
-    }
-    if (this.state.Contact === "") {
-      this.setState({ ContactFlag: true });
-    }
-    if (this.state.EmailID === "") {
-      this.setState({ EmailIDFlag: true });
-    }
-    if (this.state.Address === "") {
-      this.setState({ AddressFlag: true });
-    }
-    if (this.state.Age === "" || Number(this.state.Age) === 0) {
-      this.setState({ AgeFlag: true });
-    }
-    if (this.state.CheckInTime === "") {
-      this.setState({ CheckInTimeFlag: true });
-    }
-    if (this.state.CheckOutTime === "") {
-      this.setState({ CheckOutTimeFlag: true });
-    }
-    if (this.state.IDProof === "") {
-      this.setState({ IDProofFlag: true });
-    }
-    if (this.state.IDNumber === "") {
-      this.setState({ IDNumberFlag: true });
-    }
-  }
-
-  handleRadioChange = (event) => {
-    console.log("Handle Redio Change Calling...");
-    this.setState({ ProjectStatus: event.target.value });
-  };
-
-  handleChanges = (e) => {
-    let state = this.state;
-
-    const { name, value } = e.target;
-    console.log("name : ", name, "Value : ", value);
-    if (name === "AcRoom") {
-      if (Number(state.TotalRoom) >= value) {
-        this.setState({
-          AcRoom: value,
-          NonAcRoom: state.TotalRoom - value,
-          NoOfAcSingleBedRoom: 0,
-          NoOfAcDoubleBedRoom: 0,
-          NoOfNonAcSingleBedRoom: 0,
-          NoOfNonAcDoubleBedRoom: 0,
-        });
-      }
-    } else if (name === "NonAcRoom") {
-      if (Number(state.TotalRoom) >= value) {
-        this.setState({
-          NonAcRoom: value,
-          AcRoom: state.TotalRoom - value,
-          NoOfAcSingleBedRoom: 0,
-          NoOfAcDoubleBedRoom: 0,
-          NoOfNonAcSingleBedRoom: 0,
-          NoOfNonAcDoubleBedRoom: 0,
-        });
-      }
-    } else if (name === "NoOfAcSingleBedRoom") {
-      if (Number(state.AcRoom) > 0 && Number(state.AcRoom) >= value) {
-        this.setState({
-          NoOfAcSingleBedRoom: value,
-          NoOfAcDoubleBedRoom: state.AcRoom - value,
-        });
-      }
-    } else if (name === "NoOfAcDoubleBedRoom") {
-      if (Number(state.AcRoom) > 0 && Number(state.AcRoom) >= value) {
-        this.setState({
-          NoOfAcDoubleBedRoom: value,
-          NoOfAcSingleBedRoom: state.AcRoom - value,
-        });
-      }
-    } else if (name === "NoOfNonAcSingleBedRoom") {
-      if (Number(state.NonAcRoom) > 0 && Number(state.NonAcRoom) >= value) {
-        this.setState({
-          NoOfNonAcSingleBedRoom: value,
-          NoOfNonAcDoubleBedRoom: state.NonAcRoom - value,
-        });
-      }
-    } else if (name === "NoOfNonAcDoubleBedRoom") {
-      if (Number(state.NonAcRoom) > 0 && Number(state.NonAcRoom) >= value) {
-        this.setState({
-          NoOfNonAcDoubleBedRoom: value,
-          NoOfNonAcSingleBedRoom: state.NonAcRoom - value,
-        });
-      }
-    } else if (name === "TotalRoom") {
-      this.setState({ [name]: value, AcRoom: 0, NonAcRoom: 0 });
-    } else {
-      this.setState({ [name]: value });
-    }
   };
 
   handleChangeContact = (e) => {
@@ -864,86 +701,6 @@ export default class AdminDashboard extends Component {
     }
   };
 
-  handleTimeChanges = (e) => {
-    const { name, value } = e.target;
-
-    this.setState(
-      { [name]: value },
-      console.log("Name : ", name, " value : ", value)
-    );
-
-    if (this.state.CheckInTime !== "" && name === "CheckOutTime") {
-      const date1 = new Date(this.state.CheckInTime);
-      const date2 = new Date(value);
-      let Difference = date2.getTime() - date1.getTime();
-      let NumberOfDays = Difference / (1000 * 3600 * 24);
-      console.log("# Of Days : ", NumberOfDays);
-      if (NumberOfDays > 0) {
-        this.setState({ TotalRoomPrice: NumberOfDays * this.state.RoomPrice });
-      } else {
-        this.setState({ TotalRoomPrice: 0 });
-      }
-    } else if (this.state.CheckOutTime !== "" && name === "CheckInTime") {
-      const date2 = new Date(this.state.CheckOutTime);
-      const date1 = new Date(value);
-      let Difference = date2.getTime() - date1.getTime();
-      let NumberOfDays = Difference / (1000 * 3600 * 24);
-      console.log("# Of Days : ", NumberOfDays);
-      if (NumberOfDays > 0) {
-        this.setState({ TotalRoomPrice: NumberOfDays * this.state.RoomPrice });
-      } else {
-        this.setState({ TotalRoomPrice: 0 });
-      }
-    }
-  };
-
-  handleEditMyBooking = (data) => {
-    console.log("handleEditMyBooking Data : ", data);
-
-    if (data.roomType === "Ac") {
-      if (data.roomScenerio === "Single Bed") {
-        this.setState({ RoomPrice: this.state.AcSingleBedRoomPrice });
-      } else {
-        this.setState({ RoomPrice: this.state.AcDoubleBedRoomPrice });
-      }
-    } else {
-      if (data.roomScenerio === "Single Bed") {
-        this.setState({ RoomPrice: this.state.NonAcSingleBedRoomPrice });
-      } else {
-        this.setState({ RoomPrice: this.state.NonAcDoubleBedRoomPrice });
-      }
-    }
-
-    this.setState({
-      OpenEdit: true,
-      Update: true,
-      OpenBookModel: true,
-      CustomerID: data.customerID,
-      RoomType: data.roomType,
-      RoomScenerio: data.roomScenerio,
-      // RoomPrice: Number(data.roomPrice),
-      TotalRoomPrice: Number(data.roomPrice),
-      CustomerName: data.customerName,
-      Contact: data.contact,
-      EmailID: data.emailID,
-      Address: data.address,
-      Age: Number(data.age),
-      CheckInTime: data.checkInTime,
-      CheckOutTime: data.checkOutTime,
-      IDProof: data.idProof,
-      IDNumber: data.idNumber,
-      Pincode: data.pinCode,
-    });
-  };
-
-  handleDeleteBookingApplication = async (ID) => {
-    console.log("handleDeleteBookingApplication Calling ..... ID :", ID);
-  };
-
-  handleApplicationDeletion = async (ID) => {
-    console.log("handleApplicationDeletion Calling ..... ID :", ID);
-  };
-
   handleDeleteFeedback = async (ID) => {
     console.log("handleDeleteFeedback Calling ..... ID :", ID);
     // let data = { ID: ID };
@@ -970,37 +727,6 @@ export default class AdminDashboard extends Component {
       });
   };
 
-  handleShowApplicantInfo = (data) => {
-    console.log("handleShowApplicantInfo Calling ...");
-    this.setState({
-      ShowApplicantInfo: true,
-      Update: false,
-      open: true,
-      ApplicationID: data.applicationID,
-      JobID: data.jobID,
-      JobName: data.jobTitle,
-      Name: data.applicantName,
-      Contact: data.contact,
-      EmailID: data.emailID,
-      Address: data.address,
-      WorkExperience: data.workExperience,
-      DateOfBirth: data.dateOfBirth,
-      PassingYear: data.passingYear,
-      CollegeName: data.collegeName,
-      Degree: data.degree,
-      CurrentStatus: data.currentStatus,
-      Skill: data.skill,
-      Age: data.age,
-      Gender: data.gender,
-      Pincode: data.pinCode,
-    });
-  };
-
-  handleActiveChange = (e) => {
-    console.log(" Checked Status : ", e.target.checked);
-    this.setState({ IsActive: e.target.checked });
-  };
-
   handlePaging = async (e, value) => {
     let state = this.state;
     console.log("Current Page : ", value);
@@ -1012,73 +738,16 @@ export default class AdminDashboard extends Component {
     if (state.OpenHome) {
       await this.productServices(value);
     } else if (state.OpenArchive) {
-      this.GetArchiveList(value);
+      await this.GetArchiveList(value);
     } else if (state.OpenTrash) {
-      this.GetTrashList(value);
+      await this.GetTrashList(value);
     } else if (state.OpenCustomerList) {
-      this.GetCustomerList(value);
+      await this.GetCustomerList(value);
     } else if (state.OpenOrderList) {
-      this.GetAllOrderList(value);
+      await this.GetAllOrderList(value);
     } else if (state.OpenFeedBack) {
-      this.GetFeedBack(value);
+      await this.GetFeedBack(value);
     }
-  };
-
-  handleField = (event) => {
-    console.log("Selected Job Field : ", event.target.value);
-    this.setState({ JobField: event.target.value });
-  };
-
-  handleJobStream = (event) => {
-    console.log("Selected Stream : ", event.target.value);
-    this.setState({ JobStream: event.target.value });
-  };
-
-  SelectField = () => {
-    return this.state.Fields.map((data, index) => {
-      //console.log(dt);
-      return (
-        <MenuItem value={data.fieldName} key={index} name={data.fieldName}>
-          {data.fieldName}
-        </MenuItem>
-      );
-    });
-  };
-
-  GetFeedbackList = (e) => {
-    let self = this;
-    return Array.isArray(this.state.Feedback) && this.state.Feedback.length > 0
-      ? this.state.Feedback.map(function (data, index) {
-          return (
-            <TableRow
-              key={index}
-              style={{
-                height: "50px",
-                display: "flex",
-                borderBottom: "0.5px solid lightgray",
-              }}
-            >
-              <div className="Row" style={{ flex: 1 }}>
-                {data.feedbackID}
-              </div>
-              <div className="Row" style={{ flex: 8 }}>
-                {data.feedBack}
-              </div>
-              <div className="Row" style={{ flex: 1 }}>
-                <IconButton
-                  variant="outlined"
-                  style={{ color: "black" }}
-                  onClick={() => {
-                    self.handleDeleteFeedback(data.feedbackID);
-                  }}
-                >
-                  <DeleteIcon />
-                </IconButton>
-              </div>
-            </TableRow>
-          );
-        })
-      : null;
   };
 
   SignOut = async () => {
@@ -1095,12 +764,9 @@ export default class AdminDashboard extends Component {
     this.props.history.push("/SignIn");
   };
 
-  handleSetting = () => {
-    this.setState({ open: true });
-  };
-
   //
   OpenHomeNav = () => {
+    // debugger;
     return (
       <GetProduct
         List={this.state.Product}
@@ -1109,6 +775,7 @@ export default class AdminDashboard extends Component {
         PageNumber={this.state.PageNumber}
         handlePaging={this.handlePaging}
         productServices={this.productServices}
+        handleOpenEditProductNav={this.handleOpenEditProductNav}
       />
     );
   };
@@ -1133,9 +800,11 @@ export default class AdminDashboard extends Component {
           display: "flex",
           justifyContent: "flex-Start",
           alignItems: "flex-Start",
-          margin: 30,
-          width: "97%",
-          height: "74%",
+          margin: 10,
+          boxSizing: "border-box",
+          width: "98.5%",
+          height: "90%",
+          // background: "#202020af",
         }}
       >
         <Table
@@ -1186,7 +855,7 @@ export default class AdminDashboard extends Component {
               }}
             >
               <div className="Row" style={{ flex: 0.7 }}>
-                {data.feedbackID}
+                {data.feedbackId}
               </div>
               <div className="Row" style={{ flex: 2 }}>
                 {data.userName}
@@ -1195,20 +864,19 @@ export default class AdminDashboard extends Component {
                 className="Row"
                 style={{
                   width: "700px",
-                  // flex: 3,
                   textOverflow: "ellipsis",
                   overflow: "hidden",
                   whiteSpace: "nowrap",
                 }}
               >
-                {data.feedBack}
+                {data.feedback}
               </div>
               <div className="Row" style={{ flex: 0.5 }}>
                 <IconButton
                   variant="outlined"
                   style={{ color: "black" }}
                   onClick={() => {
-                    self.handleDeleteFeedback(data.feedbackID);
+                    self.handleDeleteFeedback(data.feedbackId);
                   }}
                 >
                   <DeleteIcon />
@@ -1231,6 +899,7 @@ export default class AdminDashboard extends Component {
         PageNumber={this.state.PageNumber}
         handlePaging={this.handlePaging}
         GetArchiveList={this.GetArchiveList}
+        productServices={this.productServices}
       />
     );
   };
@@ -1245,6 +914,7 @@ export default class AdminDashboard extends Component {
         PageNumber={this.state.PageNumber}
         handlePaging={this.handlePaging}
         GetTrashList={this.GetTrashList}
+        productServices={this.GetTrashList}
       />
     );
   };
@@ -1258,9 +928,10 @@ export default class AdminDashboard extends Component {
           display: "flex",
           justifyContent: "flex-Start",
           alignItems: "flex-start",
-          margin: 30,
-          width: "97%",
-          height: "74%",
+          margin: 10,
+          width: "98.5%",
+          height: "90%",
+          // background: "#202020af",
         }}
       >
         <Table
@@ -1272,12 +943,12 @@ export default class AdminDashboard extends Component {
               style={{
                 display: "flex",
                 minHeight: "50px",
-                flex: 9,
+                flex: 8,
               }}
             >
-              <div className="Header" style={{ flex: 1 }}>
+              {/* <div className="Header" style={{ flex: 1 }}>
                 Customer ID
-              </div>
+              </div> */}
               <div className="Header" style={{ flex: 2 }}>
                 UserName
               </div>
@@ -1312,12 +983,12 @@ export default class AdminDashboard extends Component {
                 height: "50px",
                 display: "flex",
                 borderBottom: "0.5px solid lightgray",
-                flex: 9,
+                flex: 8,
               }}
             >
-              <div className="Row" style={{ flex: 1 }}>
+              {/* <div className="Row" style={{ flex: 1 }}>
                 {data.id == -1 ? <>NA</> : <>{data.id}</>}
-              </div>
+              </div> */}
               <div className="Row" style={{ flex: 2 }}>
                 {data.userName}
               </div>
@@ -1348,9 +1019,10 @@ export default class AdminDashboard extends Component {
           display: "flex",
           justifyContent: "flex-Start",
           alignItems: "flex-Start",
-          margin: 30,
-          width: "97%",
-          height: "74%",
+          margin: 10,
+          width: "98.5%",
+          height: "90%",
+          background: "white",
         }}
       >
         <Table
@@ -1362,7 +1034,7 @@ export default class AdminDashboard extends Component {
               style={{
                 display: "flex",
                 minHeight: "50px",
-                flex: 9,
+                flex: 10,
               }}
             >
               <div className="Header" style={{ flex: 1 }}>
@@ -1377,8 +1049,11 @@ export default class AdminDashboard extends Component {
               <div className="Header" style={{ flex: 2 }}>
                 Product Type
               </div>
-              <div className="Header" style={{ flex: 2 }}>
+              <div className="Header" style={{ flex: 1 }}>
                 Product Price
+              </div>
+              <div className="Header" style={{ flex: 2 }}>
+                Rating
               </div>
             </TableRow>
           </TableHead>
@@ -1402,7 +1077,7 @@ export default class AdminDashboard extends Component {
                 height: "50px",
                 display: "flex",
                 borderBottom: "0.5px solid lightgray",
-                flex: 9,
+                flex: 10,
               }}
             >
               <div className="Row" style={{ flex: 1 }}>
@@ -1417,8 +1092,12 @@ export default class AdminDashboard extends Component {
               <div className="Row" style={{ flex: 2 }}>
                 {data.productType}
               </div>
-              <div className="Row" style={{ flex: 2 }}>
+              <div className="Row" style={{ flex: 1 }}>
                 {data.productPrice}
+              </div>
+              <div className="Row" style={{ flex: 2 }}>
+                <Rating name="Rating" value={data.rating} />
+                {/* {data.productPrice} */}
               </div>
             </TableRow>
           );
@@ -1433,8 +1112,11 @@ export default class AdminDashboard extends Component {
     return (
       <div className="AdminDashboard-Container">
         <div className="Sub-Container">
-          <div className="Header">
-            <AppBar position="static" style={{ backgroundColor: "#202020" }}>
+          <div className="Header" style={{ height: "7.5%" }}>
+            <AppBar
+              position="static"
+              style={{ backgroundColor: "#0000ff", color: "white" }}
+            >
               <Toolbar>
                 <Typography
                   variant="h6"
@@ -1445,12 +1127,15 @@ export default class AdminDashboard extends Component {
                     boxSizing: "border-box",
                   }}
                 >
-                  E-Shopping &nbsp;
+                  Book Selling Mart &nbsp;
                   <div style={{ margin: "3px 0 0 0" }}>
                     <ShopIcon />
                   </div>
                 </Typography>
-                <div className="search" style={{ flexGrow: 0.5 }}>
+                <Typography variant="h6" style={{ margin: "0 500px 0 0" }}>
+                  Admin Dashboard
+                </Typography>
+                {/* <div className="search" style={{ flexGrow: 0.5 }}>
                   <div className="searchIcon">
                     <SearchIcon />
                   </div>
@@ -1462,11 +1147,7 @@ export default class AdminDashboard extends Component {
                     }}
                     inputProps={{ "aria-label": "search" }}
                   />
-                </div>
-
-                {/* <IconButton onClick={this.handleSetting}>
-                  <SettingsIcon style={{ color: "white" }} />
-                </IconButton> */}
+                </div> */}
                 <Button
                   color="inherit"
                   onClick={() => {
@@ -1551,7 +1232,13 @@ export default class AdminDashboard extends Component {
                 </div>
               </div>
               <div className="SubBody21">
-                <div style={{ height: "100%", width: "100%" }}>
+                <div
+                  style={{
+                    height: "100%",
+                    width: "100%",
+                    background: "#202020af",
+                  }}
+                >
                   {state.OpenHome ? (
                     this.OpenHomeNav()
                   ) : state.OpenAddProduct ? (

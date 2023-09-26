@@ -1,11 +1,21 @@
 .SignUp-Container {
 	height: 100%;
 	width: 100%;
+	/* display: flex;
+	justify-content: center;
+	align-items: center; */
+	background-color: #202020af;
+}
+
+.SignUp-Container .SignIn-Container-Sub {
+	height: 90%;
+	width: 100%;
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	background-color: #202020;
+	flex-direction: column;
 }
+
 .SignUp-Container .SignUp-SubContainer {
 	height: 550px;
 	width: 500px;

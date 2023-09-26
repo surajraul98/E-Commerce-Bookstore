@@ -22,7 +22,7 @@ export default class ProductServices {
     );
   }
   UpdateProduct(data) {
-    return axiosServices.post(ProductConfiguration.UpdateProduct, data, false);
+    return axiosServices.Put(ProductConfiguration.UpdateProduct, data, false);
   }
   ProductMoveToArchive(data) {
     return axiosServices.Patch(
@@ -62,6 +62,14 @@ export default class ProductServices {
   ProductRestore(data) {
     return axiosServices.Patch(
       ProductConfiguration.ProductRestore,
+      data,
+      false
+    );
+  }
+
+  TrashProductRestore(data) {
+    return axiosServices.Patch(
+      ProductConfiguration.TrashProductRestore,
       data,
       false
     );
